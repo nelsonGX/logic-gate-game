@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",
+    "@types/qrcode": "^1.5.5",
     "next": "15.3.3",
     "prisma": "^6.9.0",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
