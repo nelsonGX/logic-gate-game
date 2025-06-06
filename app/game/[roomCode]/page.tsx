@@ -422,22 +422,31 @@ export default function GamePage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-white mb-2">🔬 Character Decoder Challenge</h1>
-          <div className="text-gray-300">
-            Agent: <span className="text-indigo-400 font-semibold">{studentName}</span> | 
-            Character: <span className="text-yellow-400 font-mono text-xl">{assignedChar}</span> | 
-            Position: {charPosition} | Room: {gameRoom?.roomCode}
+        <div className="mb-6 md:mb-8 text-center">
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">🔬 Character Decoder Challenge</h1>
+          <div className="text-sm md:text-base text-gray-300 space-y-1 md:space-y-0">
+            <div className="md:inline">
+              Agent: <span className="text-indigo-400 font-semibold">{studentName}</span>
+            </div>
+            <div className="md:inline md:ml-2">
+              | Character: <span className="text-yellow-400 font-mono text-lg md:text-xl">{assignedChar}</span>
+            </div>
+            <div className="md:inline md:ml-2">
+              | Position: {charPosition}
+            </div>
+            <div className="md:inline md:ml-2">
+              | Room: {gameRoom?.roomCode}
+            </div>
           </div>
-          <div className="text-sm text-gray-400 mt-2">
+          <div className="text-xs md:text-sm text-gray-400 mt-2">
             Solve logic gate circuits to decode your assigned character
           </div>
         </div>
 
 
         {/* Question Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between text-sm text-gray-400 mb-2">
+        <div className="mb-6 md:mb-8">
+          <div className="flex justify-between text-xs md:text-sm text-gray-400 mb-2">
             <span>Circuit {currentQuestionIndex + 1} of {questions.length}</span>
             <span>{answers.filter(a => a !== -1).length} answered</span>
           </div>
@@ -451,7 +460,7 @@ export default function GamePage() {
 
         {/* Current Question */}
         {currentQuestion && (
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8">
             <SelectQuestion
               question={currentQuestion}
               onAnswerSelect={handleAnswerSelect}
@@ -462,21 +471,21 @@ export default function GamePage() {
         )}
 
         {/* Navigation */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <button
             onClick={goToPreviousQuestion}
             disabled={currentQuestionIndex === 0}
-            className="bg-gray-600 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+            className="w-full md:w-auto bg-gray-600 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-6 py-2 rounded-lg font-semibold transition-colors"
           >
             ← Previous
           </button>
 
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap justify-center gap-2 max-w-full">
             {questions.map((question, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentQuestionIndex(index)}
-                className={`w-8 h-8 rounded-full font-semibold text-sm transition-colors ${
+                className={`w-8 h-8 md:w-8 md:h-8 rounded-full font-semibold text-xs md:text-sm transition-colors flex-shrink-0 ${
                   index === currentQuestionIndex
                     ? 'bg-indigo-600 text-white'
                     : answers[index] !== -1
@@ -494,7 +503,7 @@ export default function GamePage() {
             <button
               onClick={submitAnswers}
               disabled={!allAnswered}
-              className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+              className="w-full md:w-auto bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-6 py-2 rounded-lg font-semibold transition-colors"
             >
               Submit All →
             </button>
@@ -502,7 +511,7 @@ export default function GamePage() {
             <button
               onClick={goToNextQuestion}
               disabled={currentQuestionIndex === questions.length - 1}
-              className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+              className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-6 py-2 rounded-lg font-semibold transition-colors"
             >
               Next →
             </button>
