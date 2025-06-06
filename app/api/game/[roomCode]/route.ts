@@ -8,7 +8,8 @@ export async function GET(
   { params }: { params: { roomCode: string } }
 ) {
   try {
-    const { roomCode } = params;
+    const awaitedParams = await params;
+    const { roomCode } = awaitedParams;
 
     const gameRoom = await prisma.gameRoom.findUnique({
       where: {

@@ -8,7 +8,8 @@ export async function POST(
   { params }: { params: { roomCode: string } }
 ) {
   try {
-    const { roomCode } = params;
+    const awaitedParams = await params;
+    const { roomCode } = awaitedParams;
     const { displayName } = await request.json();
 
     if (!displayName || displayName.trim().length === 0) {
