@@ -124,7 +124,7 @@ export default function SelectQuestion({
                       ? 'bg-green-400 border-green-300 text-green-900' 
                       : 'bg-red-400 border-red-300 text-red-900'
                   }`}
-                  title={`Input ${index + 1}: ${input ? '1' : '0'}`}
+                  title={`輸入 ${index + 1}: ${input ? '1' : '0'}`}
                 >
                   {input ? '1' : '0'}
                 </div>
@@ -149,7 +149,7 @@ export default function SelectQuestion({
             <div className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 bg-gray-400 border-gray-300 flex items-center justify-center text-xs font-bold text-gray-700">
               ?
             </div>
-            <span className="text-gray-300 text-xs md:text-sm font-medium">OUT</span>
+            <span className="text-gray-300 text-xs md:text-sm font-medium">輸出</span>
           </div>
         </div>
       </div>
@@ -178,7 +178,7 @@ export default function SelectQuestion({
                         ? 'bg-green-400 border-green-300 text-green-900' 
                         : 'bg-red-400 border-red-300 text-red-900'
                     }`}
-                    title={`Input ${index + 1}: ${input ? '1' : '0'}`}
+                    title={`輸入 ${index + 1}: ${input ? '1' : '0'}`}
                   >
                     {input ? '1' : '0'}
                   </div>
@@ -211,7 +211,7 @@ export default function SelectQuestion({
               {/* Input from Gate 1 */}
               <div className="flex items-center space-x-2 md:space-x-3">
                 <div className="w-4 md:w-6 h-0.5 bg-gray-400" />
-                <div className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 bg-yellow-400 border-yellow-300 flex items-center justify-center text-xs font-bold text-yellow-900" title="Output from Gate 1">
+                <div className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 bg-yellow-400 border-yellow-300 flex items-center justify-center text-xs font-bold text-yellow-900" title="閩 1 輸出">
                   G1
                 </div>
               </div>
@@ -224,7 +224,7 @@ export default function SelectQuestion({
                       ? 'bg-green-400 border-green-300 text-green-900' 
                       : 'bg-red-400 border-red-300 text-red-900'
                   }`}
-                  title={`Input C: ${gate2.inputs[1] ? '1' : '0'}`}
+                  title={`輸入 C: ${gate2.inputs[1] ? '1' : '0'}`}
                 >
                   {gate2.inputs[1] ? '1' : '0'}
                 </div>
@@ -246,7 +246,7 @@ export default function SelectQuestion({
               <div className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 bg-gray-400 border-gray-300 flex items-center justify-center text-xs font-bold text-gray-700">
                 ?
               </div>
-              <span className="text-gray-300 text-xs md:text-sm font-medium">OUT</span>
+              <span className="text-gray-300 text-xs md:text-sm font-medium">輸出</span>
             </div>
           </div>
         </div>
@@ -267,7 +267,7 @@ export default function SelectQuestion({
         </h3>
         {question.isFinal && (
           <div className="text-xs md:text-sm text-yellow-400 bg-yellow-900/30 px-3 py-1 rounded-lg inline-block">
-            🔑 This determines your bit contribution
+            🔑 這決定了您的位元貢獻
           </div>
         )}
       </div>
@@ -286,7 +286,7 @@ export default function SelectQuestion({
       {question.bitGroup && (
         <div className="mb-4 text-center">
           <div className="inline-block bg-gray-700/50 px-3 md:px-4 py-2 rounded-lg">
-            <span className="text-gray-300 text-xs md:text-sm">Circuit: {question.bitGroup}</span>
+            <span className="text-gray-300 text-xs md:text-sm">電路： {question.bitGroup}</span>
           </div>
         </div>
       )}
@@ -312,7 +312,7 @@ export default function SelectQuestion({
       {showResult && question.explanation && (
         <div className="mt-4 md:mt-6 p-3 md:p-4 bg-gray-700/50 rounded-xl border border-gray-600">
           <div className="text-xs md:text-sm text-gray-300">
-            <strong className="text-indigo-400">Explanation:</strong> {question.explanation}
+            <strong className="text-indigo-400">解釋：</strong> {question.explanation}
           </div>
         </div>
       )}
@@ -326,11 +326,11 @@ export default function SelectQuestion({
                 ? 'bg-green-600/20 text-green-400 border border-green-600/30' 
                 : 'bg-red-600/20 text-red-400 border border-red-600/30'
             }`}>
-              {selectedAnswer === question.correctAnswer ? '✓ Correct' : '✗ Incorrect'}
+              {selectedAnswer === question.correctAnswer ? '✓ 正確' : '✗ 錯誤'}
             </div>
           ) : (
             <div className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium bg-indigo-600/20 text-indigo-400 border border-indigo-600/30">
-              Answer Selected
+              已選擇答案
             </div>
           )}
         </div>

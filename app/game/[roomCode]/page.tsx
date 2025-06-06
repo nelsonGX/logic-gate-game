@@ -282,12 +282,12 @@ export default function GamePage() {
     return (
       <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-600">
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-white mb-2">Escape Code Progress</h3>
+          <h3 className="text-lg font-semibold text-white mb-2">逃脱密碼進度</h3>
           <div className="flex justify-center items-center flex-wrap">
             {displayChars}
           </div>
           <div className="text-sm text-gray-400 mt-2">
-            {gameRoom.students.filter(s => s.isCompleted).length} / {gameRoom.students.length} characters unlocked
+            {gameRoom.students.filter(s => s.isCompleted).length} / {gameRoom.students.length} 字元已解鎖
           </div>
         </div>
       </div>
@@ -297,7 +297,7 @@ export default function GamePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading escape room...</div>
+        <div className="text-white text-xl">載入密室逃脱中...</div>
       </div>
     );
   }
@@ -311,7 +311,7 @@ export default function GamePage() {
             onClick={() => setError(null)}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition-colors"
           >
-            Try Again
+            重試
           </button>
         </div>
       </div>
@@ -325,17 +325,17 @@ export default function GamePage() {
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-                🔬 Logic Gate Escape Room
+                🔬 邏輯閩密室逃脱
               </h1>
-              <p className="text-gray-300 mt-2">Room: {gameRoom?.roomCode}</p>
+              <p className="text-gray-300 mt-2">房間： {gameRoom?.roomCode}</p>
               <p className="text-xs text-gray-500 mt-2">
-                Each agent solves logic gate puzzles to contribute bits to the escape code
+                每個特務解決邏輯閩謎題來為逃脱密碼貢獻位元
               </p>
             </div>
 
             {/* Student Join Status */}
             <div className="bg-gray-700/30 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-4 text-center">Agent Status</h3>
+              <h3 className="text-lg font-semibold text-white mb-4 text-center">特務狀態</h3>
               
               {/* Join Progress */}
               <div className="grid grid-cols-3 gap-4 mb-4">
@@ -343,26 +343,26 @@ export default function GamePage() {
                   <div className="text-2xl font-bold text-green-400">
                     {gameRoom?.students.length || 0}
                   </div>
-                  <div className="text-xs text-gray-300">Joined</div>
+                  <div className="text-xs text-gray-300">已加入</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-400">
                     {(gameRoom?.studentAmount || 0) - (gameRoom?.students.length || 0)}
                   </div>
-                  <div className="text-xs text-gray-300">Waiting</div>
+                  <div className="text-xs text-gray-300">等待中</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-400">
                     {gameRoom?.studentAmount || 0}
                   </div>
-                  <div className="text-xs text-gray-300">Total</div>
+                  <div className="text-xs text-gray-300">總計</div>
                 </div>
               </div>
 
               {/* Progress Bar */}
               <div className="mb-4">
                 <div className="flex justify-between text-xs text-gray-400 mb-1">
-                  <span>Join Progress</span>
+                  <span>加入進度</span>
                   <span>{Math.round(((gameRoom?.students.length || 0) / (gameRoom?.studentAmount || 1)) * 100)}%</span>
                 </div>
                 <div className="w-full bg-gray-600 rounded-full h-2">
@@ -376,7 +376,7 @@ export default function GamePage() {
               {/* Recently Joined */}
               {gameRoom && gameRoom.students.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-300 mb-2">Recent Agents:</h4>
+                  <h4 className="text-sm font-medium text-gray-300 mb-2">最近加入的特務：</h4>
                   <div className="space-y-1 max-h-20 overflow-y-auto">
                     {gameRoom.students
                       .slice(-3) // Show last 3 students
@@ -387,7 +387,7 @@ export default function GamePage() {
                             <span className="text-sm text-gray-300">{student.displayName}</span>
                           </div>
                           <div className="text-xs text-gray-400">
-                            Char {student.charPosition}
+                            字元 {student.charPosition}
                           </div>
                         </div>
                       ))}
@@ -399,7 +399,7 @@ export default function GamePage() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <label htmlFor="studentName" className="block text-sm font-semibold text-gray-200">
-                  Agent Name
+                  特務姓名
                 </label>
                 <input
                   id="studentName"
@@ -408,7 +408,7 @@ export default function GamePage() {
                   onChange={(e) => setStudentName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && joinGame()}
                   className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 hover:bg-gray-600 text-white placeholder-gray-400"
-                  placeholder="Enter your agent name"
+                  placeholder="輸入您的特務姓名"
                   required
                 />
               </div>
@@ -418,7 +418,7 @@ export default function GamePage() {
                 disabled={!studentName.trim()}
                 className="w-full bg-gradient-to-r from-indigo-600 to-cyan-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transition-all duration-200"
               >
-                Enter Escape Room
+                進入密室逃脱
               </button>
             </div>
           </div>
@@ -435,10 +435,10 @@ export default function GamePage() {
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-white mb-4">
-                {submitResult.correct ? '🎉 Group Completed!' : '❌ Try Again'}
+                {submitResult.correct ? '🎉 組別完成！' : '❌ 再試一次'}
               </h1>
               <div className="text-lg text-indigo-400 mb-4">
-                {submitResult.group.toUpperCase()} Circuit: 
+                {submitResult.group.toUpperCase()} 電路： 
                 <span className={`font-mono text-3xl ml-2 ${submitResult.correct ? 'text-green-400' : 'text-red-400'}`}>
                   {submitResult.correct ? '✓' : '✗'}
                 </span>
@@ -448,7 +448,7 @@ export default function GamePage() {
               </div>
               {submitResult.allGroupsCompleted && (
                 <div className="text-lg text-green-400 mt-4">
-                  🎊 Target character fully decoded! 🎊
+                  🎊 目標字元已完全解碼！ 🎊
                 </div>
               )}
             </div>
@@ -464,7 +464,7 @@ export default function GamePage() {
                   }`}>
                     <div className="text-xl font-bold mb-2">{group.toUpperCase()}</div>
                     <div className="text-sm">
-                      {getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma') ? 'Complete' : 'Pending'}
+                      {getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma') ? '完成' : '待處理'}
                     </div>
                   </div>
                 </div>
@@ -477,7 +477,7 @@ export default function GamePage() {
                   onClick={resetGroup}
                   className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
                 >
-                  Try {currentGroup.toUpperCase()} Again
+                  重試 {currentGroup.toUpperCase()}
                 </button>
               )}
               <button
@@ -495,10 +495,10 @@ export default function GamePage() {
                 }}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
               >
-                {submitResult.correct && currentGroup === 'alpha' ? 'Continue to Beta' :
-                 submitResult.correct && currentGroup === 'beta' ? 'Continue to Gamma' :
-                 submitResult.correct && currentGroup === 'gamma' ? 'Character Complete!' :
-                 'Continue'}
+                {submitResult.correct && currentGroup === 'alpha' ? '繼續到 Beta' :
+                 submitResult.correct && currentGroup === 'beta' ? '繼續到 Gamma' :
+                 submitResult.correct && currentGroup === 'gamma' ? '字元完成！' :
+                 '繼續'}
               </button>
             </div>
           </div>
@@ -518,23 +518,23 @@ export default function GamePage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6 md:mb-8 text-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">🔬 Character Decoder Challenge</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">🔬 字元解碼挑戰</h1>
           <div className="text-sm md:text-base text-gray-300 space-y-1 md:space-y-0">
             <div className="md:inline">
-              Agent: <span className="text-indigo-400 font-semibold">{studentName}</span>
+              特務： <span className="text-indigo-400 font-semibold">{studentName}</span>
             </div>
             <div className="md:inline md:ml-2">
-              | Target: <span className="text-yellow-400 font-mono text-lg md:text-xl">???</span>
+              | 目標： <span className="text-yellow-400 font-mono text-lg md:text-xl">???</span>
             </div>
             <div className="md:inline md:ml-2">
-              | Position: {charPosition}
+              | 位置： {charPosition}
             </div>
             <div className="md:inline md:ml-2">
-              | Room: {gameRoom?.roomCode}
+              | 房間： {gameRoom?.roomCode}
             </div>
           </div>
           <div className="text-xs md:text-sm text-gray-400 mt-2">
-            Solve logic gate circuits group by group to decode your assigned character
+            逐組解決邏輯閩電路來解碼您指定的字元
           </div>
         </div>
 
@@ -566,9 +566,9 @@ export default function GamePage() {
         <div className="mb-6 md:mb-8">
           <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-600">
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-white mb-2">Target Bits Progress</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">目標位元進度</h3>
               <div className="text-sm text-gray-400 mb-3">
-                Your assigned character → 8-bit binary
+                您指定的字元 → 8位元二進位
               </div>
               <div className="flex justify-center items-center space-x-1">
                 {/* Alpha bits (0-2) */}
@@ -623,9 +623,9 @@ export default function GamePage() {
                 </div>
               </div>
               <div className="text-xs text-gray-400 mt-3">
-                <span className="text-blue-400">Alpha (3 bits)</span> | 
-                <span className="text-purple-400 ml-1">Beta (3 bits)</span> | 
-                <span className="text-yellow-400 ml-1">Gamma (2 bits)</span>
+                <span className="text-blue-400">Alpha (3 位元)</span> | 
+                <span className="text-purple-400 ml-1">Beta (3 位元)</span> | 
+                <span className="text-yellow-400 ml-1">Gamma (2 位元)</span>
               </div>
             </div>
           </div>
@@ -635,8 +635,8 @@ export default function GamePage() {
         {/* Question Progress Bar */}
         <div className="mb-6 md:mb-8">
           <div className="flex justify-between text-xs md:text-sm text-gray-400 mb-2">
-            <span>{currentGroup.toUpperCase()} Circuit {currentQuestionIndex + 1} of {currentQuestions.length}</span>
-            <span>{currentAnswers.filter(a => a !== -1).length} answered</span>
+            <span>{currentGroup.toUpperCase()} 電路 {currentQuestionIndex + 1} / {currentQuestions.length}</span>
+            <span>{currentAnswers.filter(a => a !== -1).length} 已回答</span>
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2">
             <div 
@@ -665,7 +665,7 @@ export default function GamePage() {
             disabled={currentQuestionIndex === 0}
             className="w-full md:w-auto bg-gray-600 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-6 py-2 rounded-lg font-semibold transition-colors"
           >
-            ← Previous
+            ← 上一題
           </button>
 
           <div className="flex flex-wrap justify-center gap-2 max-w-full">
@@ -693,7 +693,7 @@ export default function GamePage() {
               disabled={!allAnswered}
               className="w-full md:w-auto bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-6 py-2 rounded-lg font-semibold transition-colors"
             >
-              Submit {currentGroup.toUpperCase()} →
+              提交 {currentGroup.toUpperCase()} →
             </button>
           ) : (
             <button
@@ -701,7 +701,7 @@ export default function GamePage() {
               disabled={currentQuestionIndex === currentQuestions.length - 1}
               className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-6 py-2 rounded-lg font-semibold transition-colors"
             >
-              Next →
+              下一題 →
             </button>
           )}
         </div>
@@ -713,7 +713,7 @@ export default function GamePage() {
               onClick={submitGroupAnswers}
               className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors"
             >
-              🚀 Submit {currentGroup.toUpperCase()} Group
+              🚀 提交 {currentGroup.toUpperCase()} 組
             </button>
           </div>
         )}

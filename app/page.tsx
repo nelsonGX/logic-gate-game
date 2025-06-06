@@ -77,15 +77,15 @@ export default function Main() {
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-                Team Setup
+                隊伍設定
               </h1>
-              <p className="text-gray-300 mt-2">Configure your game settings</p>
+              <p className="text-gray-300 mt-2">設定您的遊戲參數</p>
             </div>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="teamNumber" className="block text-sm font-semibold text-gray-200">
-                Team Number
+                隊伍編號
               </label>
               <input
                 id="teamNumber"
@@ -93,14 +93,14 @@ export default function Main() {
                 value={teamNumber}
                 onChange={(e) => setTeamNumber(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 hover:bg-gray-600 text-white placeholder-gray-400"
-                placeholder="Enter team number"
+                placeholder="輸入隊伍編號"
                 required
               />
             </div>
             
             <div className="space-y-2">
               <label htmlFor="numStudents" className="block text-sm font-semibold text-gray-200">
-                Number of Students
+                學生人數
               </label>
               <input
                 id="numStudents"
@@ -108,7 +108,7 @@ export default function Main() {
                 value={numStudents}
                 onChange={(e) => setNumStudents(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 hover:bg-gray-600 text-white placeholder-gray-400"
-                placeholder="Enter number of students"
+                placeholder="輸入學生人數"
                 required
               />
             </div>
@@ -121,10 +121,10 @@ export default function Main() {
               {isLoading ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Creating Game...</span>
+                  <span>建立遊戲中...</span>
                 </div>
               ) : (
-                'Create Game'
+                '建立遊戲'
               )}
             </button>
           </form>
@@ -133,15 +133,15 @@ export default function Main() {
         <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-              Game Created!
+              遊戲已建立！
             </h1>
-            <p className="text-gray-300 mt-2">Share this code or QR with your students</p>
+            <p className="text-gray-300 mt-2">將此代碼或QR碼分享給您的學生</p>
           </div>
           
           <div className="space-y-6">
             <div className="text-center">
               <div className="bg-gray-700 rounded-lg p-4 mb-4">
-                <p className="text-gray-300 text-sm mb-2">Room Code:</p>
+                <p className="text-gray-300 text-sm mb-2">房間代碼：</p>
                 <p className="text-3xl font-bold text-green-400 font-mono">{roomCode}</p>
               </div>
               
@@ -154,7 +154,7 @@ export default function Main() {
               {/* Student Join Status */}
               {gameRoom && (
                 <div className="bg-gray-700/50 rounded-lg p-4 mb-6">
-                  <h3 className="text-lg font-semibold text-white mb-3">Student Join Status</h3>
+                  <h3 className="text-lg font-semibold text-white mb-3">學生加入狀態</h3>
                   
                   {/* Join Progress */}
                   <div className="grid grid-cols-3 gap-3 mb-4">
@@ -162,26 +162,26 @@ export default function Main() {
                       <div className="text-xl font-bold text-green-400">
                         {gameRoom.students?.length || 0}
                       </div>
-                      <div className="text-xs text-gray-300">Joined</div>
+                      <div className="text-xs text-gray-300">已加入</div>
                     </div>
                     <div className="text-center">
                       <div className="text-xl font-bold text-yellow-400">
                         {(gameRoom.studentAmount || 0) - (gameRoom.students?.length || 0)}
                       </div>
-                      <div className="text-xs text-gray-300">Waiting</div>
+                      <div className="text-xs text-gray-300">等待中</div>
                     </div>
                     <div className="text-center">
                       <div className="text-xl font-bold text-blue-400">
                         {gameRoom.studentAmount || 0}
                       </div>
-                      <div className="text-xs text-gray-300">Total</div>
+                      <div className="text-xs text-gray-300">總計</div>
                     </div>
                   </div>
 
                   {/* Progress Bar */}
                   <div className="mb-4">
                     <div className="flex justify-between text-xs text-gray-400 mb-1">
-                      <span>Join Progress</span>
+                      <span>加入進度</span>
                       <span>{Math.round(((gameRoom.students?.length || 0) / (gameRoom.studentAmount || 1)) * 100)}%</span>
                     </div>
                     <div className="w-full bg-gray-600 rounded-full h-2">
@@ -195,7 +195,7 @@ export default function Main() {
                   {/* Recently Joined Students */}
                   {gameRoom.students && gameRoom.students.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-300 mb-2">Recent Students:</h4>
+                      <h4 className="text-sm font-medium text-gray-300 mb-2">最近加入的學生：</h4>
                       <div className="space-y-1 max-h-24 overflow-y-auto">
                         {gameRoom.students
                           .slice(-4) // Show last 4 students
@@ -206,7 +206,7 @@ export default function Main() {
                                 <span className="text-sm text-gray-300">{student.displayName}</span>
                               </div>
                               <div className="text-xs text-gray-400">
-                                Char {student.charPosition}
+                                字元 {student.charPosition}
                               </div>
                             </div>
                           ))}
@@ -219,7 +219,7 @@ export default function Main() {
                     <div className="mt-4 p-3 bg-green-600/20 border border-green-500/50 rounded-lg">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                        <span className="text-green-300 font-semibold">All students joined! Ready to start.</span>
+                        <span className="text-green-300 font-semibold">所有學生已加入！可以開始遊戲。</span>
                       </div>
                     </div>
                   )}
@@ -232,7 +232,7 @@ export default function Main() {
                 onClick={() => router.push(`/host/${roomCode}`)}
                 className="w-full bg-gradient-to-r from-indigo-600 to-cyan-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-all duration-200"
               >
-                Open Host Dashboard
+                開啟主持人儀表板
               </button>
               
               <button
@@ -241,7 +241,7 @@ export default function Main() {
                 }}
                 className="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold border border-gray-600 transition-all duration-200"
               >
-                Copy Game Link
+                複製遊戲連結
               </button>
               
               <button
@@ -253,7 +253,7 @@ export default function Main() {
                 }}
                 className="w-full bg-transparent hover:bg-gray-700 text-gray-400 hover:text-white py-2 px-6 rounded-xl font-medium border border-gray-600 transition-all duration-200"
               >
-                Create Another Game
+                建立另一個遊戲
               </button>
             </div>
           </div>
