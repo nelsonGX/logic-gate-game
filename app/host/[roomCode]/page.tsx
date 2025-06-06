@@ -10,6 +10,9 @@ interface Student {
   charPosition: number;
   targetBits: string;
   solvedChar: string | null;
+  alphaCompleted: boolean;
+  betaCompleted: boolean;
+  gammaCompleted: boolean;
   isCompleted: boolean;
   completedAt: string | null;
 }
@@ -194,10 +197,71 @@ export default function HostView() {
                 </div>
                 
                 {student ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="text-sm text-gray-300">
                       <strong>Student:</strong> {student.displayName}
                     </div>
+                    <div className="text-sm text-gray-300">
+                      <strong>Target:</strong> 
+                      <span className="font-mono ml-1">???</span>
+                    </div>
+                    
+                    {/* Bit Progress Display */}
+                    <div className="bg-gray-700/30 rounded-lg p-2">
+                      <div className="text-xs text-gray-400 mb-1">Bit Progress:</div>
+                      <div className="flex justify-center items-center space-x-0.5">
+                        {/* Alpha bits (0-2) */}
+                        {[0, 1, 2].map((bitIndex) => (
+                          <div
+                            key={`alpha-${bitIndex}`}
+                            className={`w-6 h-6 rounded border flex items-center justify-center font-mono text-xs font-bold ${
+                              student.alphaCompleted
+                                ? 'bg-green-600/30 border-green-500 text-green-300'
+                                : 'bg-gray-600/50 border-gray-500 text-gray-400'
+                            }`}
+                            title={`Alpha bit ${bitIndex + 1}`}
+                          >
+                            {student.alphaCompleted ? student.targetBits[bitIndex] : '_'}
+                          </div>
+                        ))}
+                        <div className="text-gray-500 mx-1 text-xs">|</div>
+                        {/* Beta bits (3-5) */}
+                        {[3, 4, 5].map((bitIndex) => (
+                          <div
+                            key={`beta-${bitIndex}`}
+                            className={`w-6 h-6 rounded border flex items-center justify-center font-mono text-xs font-bold ${
+                              student.betaCompleted
+                                ? 'bg-green-600/30 border-green-500 text-green-300'
+                                : 'bg-gray-600/50 border-gray-500 text-gray-400'
+                            }`}
+                            title={`Beta bit ${bitIndex - 2}`}
+                          >
+                            {student.betaCompleted ? student.targetBits[bitIndex] : '_'}
+                          </div>
+                        ))}
+                        <div className="text-gray-500 mx-1 text-xs">|</div>
+                        {/* Gamma bits (6-7) */}
+                        {[6, 7].map((bitIndex) => (
+                          <div
+                            key={`gamma-${bitIndex}`}
+                            className={`w-6 h-6 rounded border flex items-center justify-center font-mono text-xs font-bold ${
+                              student.gammaCompleted
+                                ? 'bg-green-600/30 border-green-500 text-green-300'
+                                : 'bg-gray-600/50 border-gray-500 text-gray-400'
+                            }`}
+                            title={`Gamma bit ${bitIndex - 5}`}
+                          >
+                            {student.gammaCompleted ? student.targetBits[bitIndex] : '_'}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1 text-center">
+                        <span className={student.alphaCompleted ? 'text-green-400' : ''}>α</span>
+                        <span className={student.betaCompleted ? 'text-green-400 ml-3' : 'ml-3'}>β</span>
+                        <span className={student.gammaCompleted ? 'text-green-400 ml-3' : 'ml-3'}>γ</span>
+                      </div>
+                    </div>
+
                     <div className="text-sm text-gray-300">
                       <strong>Status:</strong> {
                         student.isCompleted ? 'Completed' : 'Working...'

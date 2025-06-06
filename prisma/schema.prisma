@@ -29,7 +29,12 @@ model Student {
   targetBits      String     // 8-bit ASCII representation (e.g., "01000001")
   solvedChar      String?    // The solved character (null until completed)
   questions       String     // JSON array of questions with answers
-  answers         String?    // JSON array of student's answers
+  alphaAnswers    String?    // JSON array of Alpha group answers
+  betaAnswers     String?    // JSON array of Beta group answers
+  gammaAnswers    String?    // JSON array of Gamma group answers
+  alphaCompleted  Boolean    @default(false)
+  betaCompleted   Boolean    @default(false)
+  gammaCompleted  Boolean    @default(false)
   isCompleted     Boolean    @default(false)
   completedAt     DateTime?
   

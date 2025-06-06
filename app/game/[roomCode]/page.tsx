@@ -21,6 +21,9 @@ interface Student {
   charPosition: number;
   targetBits: string;
   solvedChar: string | null;
+  alphaCompleted: boolean;
+  betaCompleted: boolean;
+  gammaCompleted: boolean;
   isCompleted: boolean;
   completedAt: string | null;
 }
@@ -35,6 +38,8 @@ interface Question {
   correctAnswer: number;
   explanation?: string;
   isFinal?: boolean;
+  bitGroup: string;
+  bitIndex: number;
 }
 
 export default function GamePage() {
@@ -48,10 +53,16 @@ export default function GamePage() {
   const [studentId, setStudentId] = useState<string | null>(null);
   const [assignedChar, setAssignedChar] = useState<string | null>(null);
   const [charPosition, setCharPosition] = useState<number | null>(null);
+  const [targetBits, setTargetBits] = useState<string>('00000000');
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [answers, setAnswers] = useState<number[]>([]);
+  const [alphaAnswers, setAlphaAnswers] = useState<number[]>([]);
+  const [betaAnswers, setBetaAnswers] = useState<number[]>([]);
+  const [gammaAnswers, setGammaAnswers] = useState<number[]>([]);
+  const [alphaCompleted, setAlphaCompleted] = useState(false);
+  const [betaCompleted, setBetaCompleted] = useState(false);
+  const [gammaCompleted, setGammaCompleted] = useState(false);
+  const [currentGroup, setCurrentGroup] = useState<'alpha' | 'beta' | 'gamma'>('alpha');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [submitResult, setSubmitResult] = useState<any>(null);
 
   useEffect(() => {
@@ -97,8 +108,17 @@ export default function GamePage() {
         setStudentId(data.studentId);
         setAssignedChar(data.assignedChar);
         setCharPosition(data.charPosition);
+        setTargetBits(data.targetBits);
         setQuestions(data.questions);
-        setAnswers(new Array(data.questions.length).fill(-1));
+        
+        // Group questions and initialize answer arrays
+        const alphaQuestions = data.questions.filter((q: Question) => q.bitGroup.toLowerCase() === 'alpha');
+        const betaQuestions = data.questions.filter((q: Question) => q.bitGroup.toLowerCase() === 'beta');
+        const gammaQuestions = data.questions.filter((q: Question) => q.bitGroup.toLowerCase() === 'gamma');
+        
+        setAlphaAnswers(new Array(alphaQuestions.length).fill(-1));
+        setBetaAnswers(new Array(betaQuestions.length).fill(-1));
+        setGammaAnswers(new Array(gammaQuestions.length).fill(-1));
         setIsJoined(true);
       } else {
         const errorData = await response.json();
@@ -110,13 +130,38 @@ export default function GamePage() {
   };
 
   const handleAnswerSelect = (questionId: string, selectedAnswer: number) => {
-    const newAnswers = [...answers];
-    newAnswers[currentQuestionIndex] = selectedAnswer;
-    setAnswers(newAnswers);
+    const currentQuestion = getCurrentQuestions()[currentQuestionIndex];
+    const group = currentQuestion.bitGroup.toLowerCase();
+    const groupQuestionIndex = getCurrentQuestions().findIndex((q, i) => i === currentQuestionIndex);
+    
+    if (group === 'alpha') {
+      const newAnswers = [...alphaAnswers];
+      newAnswers[groupQuestionIndex] = selectedAnswer;
+      setAlphaAnswers(newAnswers);
+    } else if (group === 'beta') {
+      const newAnswers = [...betaAnswers];
+      newAnswers[groupQuestionIndex] = selectedAnswer;
+      setBetaAnswers(newAnswers);
+    } else if (group === 'gamma') {
+      const newAnswers = [...gammaAnswers];
+      newAnswers[groupQuestionIndex] = selectedAnswer;
+      setGammaAnswers(newAnswers);
+    }
+  };
+
+  const getCurrentQuestions = () => {
+    return questions.filter(q => q.bitGroup.toLowerCase() === currentGroup);
+  };
+
+  const getCurrentAnswers = () => {
+    if (currentGroup === 'alpha') return alphaAnswers;
+    if (currentGroup === 'beta') return betaAnswers;
+    return gammaAnswers;
   };
 
   const goToNextQuestion = () => {
-    if (currentQuestionIndex < questions.length - 1) {
+    const currentQuestions = getCurrentQuestions();
+    if (currentQuestionIndex < currentQuestions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
@@ -127,9 +172,11 @@ export default function GamePage() {
     }
   };
 
-  const submitAnswers = async () => {
-    if (!studentId || answers.some(answer => answer === -1)) {
-      setError('Please answer all questions before submitting');
+  const submitGroupAnswers = async () => {
+    const currentAnswers = getCurrentAnswers();
+    
+    if (!studentId || currentAnswers.some(answer => answer === -1)) {
+      setError(`Please answer all ${currentGroup} questions before submitting`);
       return;
     }
 
@@ -140,14 +187,20 @@ export default function GamePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          answers: answers,
+          group: currentGroup,
+          answers: currentAnswers,
         }),
       });
 
       if (response.ok) {
         const result = await response.json();
         setSubmitResult(result);
-        setIsSubmitted(true);
+        
+        // Update group completion status
+        if (currentGroup === 'alpha') setAlphaCompleted(result.correct);
+        else if (currentGroup === 'beta') setBetaCompleted(result.correct);
+        else if (currentGroup === 'gamma') setGammaCompleted(result.correct);
+        
         fetchGameRoom(); // Refresh to see updated completion status
       } else {
         const errorData = await response.json();
@@ -158,11 +211,47 @@ export default function GamePage() {
     }
   };
 
-  const resetQuiz = () => {
-    setAnswers(new Array(questions.length).fill(-1));
+  const resetGroup = () => {
+    const currentQuestions = getCurrentQuestions();
+    const emptyAnswers = new Array(currentQuestions.length).fill(-1);
+    
+    if (currentGroup === 'alpha') {
+      setAlphaAnswers(emptyAnswers);
+      setAlphaCompleted(false);
+    } else if (currentGroup === 'beta') {
+      setBetaAnswers(emptyAnswers);
+      setBetaCompleted(false);
+    } else if (currentGroup === 'gamma') {
+      setGammaAnswers(emptyAnswers);
+      setGammaCompleted(false);
+    }
+    
     setCurrentQuestionIndex(0);
-    setIsSubmitted(false);
     setSubmitResult(null);
+  };
+
+  const switchGroup = (newGroup: 'alpha' | 'beta' | 'gamma') => {
+    setCurrentGroup(newGroup);
+    setCurrentQuestionIndex(0);
+    setSubmitResult(null);
+  };
+
+  const getGroupCompletionStatus = (group: 'alpha' | 'beta' | 'gamma') => {
+    if (group === 'alpha') return alphaCompleted;
+    if (group === 'beta') return betaCompleted;
+    return gammaCompleted;
+  };
+
+  const getBitValue = (group: 'alpha' | 'beta' | 'gamma', bitIndex: number) => {
+    if (!getGroupCompletionStatus(group)) return '_';
+    
+    if (group === 'alpha') {
+      return targetBits[bitIndex] || '_';
+    } else if (group === 'beta') {
+      return targetBits[bitIndex + 3] || '_';
+    } else { // gamma
+      return targetBits[bitIndex + 6] || '_';
+    }
   };
 
   // Progress display component
@@ -338,74 +427,78 @@ export default function GamePage() {
     );
   }
 
-  // Show results screen after submission
-  if (isSubmitted && submitResult) {
+  // Show results screen after group submission
+  if (submitResult) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-white mb-4">
-                {submitResult.allCorrect ? '🎉 Character Decoded!' : '❌ Decoding Failed'}
+                {submitResult.correct ? '🎉 Group Completed!' : '❌ Try Again'}
               </h1>
-              <div className="text-xl text-gray-300 mb-2">
-                Score: {submitResult.score} / {submitResult.totalQuestions}
-              </div>
               <div className="text-lg text-indigo-400 mb-4">
-                Character '{assignedChar}' at position {charPosition}: 
-                <span className={`font-mono text-3xl ml-2 ${submitResult.allCorrect ? 'text-green-400' : 'text-red-400'}`}>
-                  {submitResult.allCorrect ? '✓' : '✗'}
+                {submitResult.group.toUpperCase()} Circuit: 
+                <span className={`font-mono text-3xl ml-2 ${submitResult.correct ? 'text-green-400' : 'text-red-400'}`}>
+                  {submitResult.correct ? '✓' : '✗'}
                 </span>
               </div>
-              {submitResult.allCorrect && (
-                <div className="text-sm text-green-400">
-                  Your character has been added to the escape code!
+              <div className="text-sm text-gray-300">
+                {submitResult.message}
+              </div>
+              {submitResult.allGroupsCompleted && (
+                <div className="text-lg text-green-400 mt-4">
+                  🎊 Target character fully decoded! 🎊
                 </div>
               )}
             </div>
 
-
-            {/* Question Results */}
-            <div className="space-y-4 mb-8">
-              {questions.map((question, index) => (
-                <div key={question.id} className="bg-gray-700/50 rounded-xl p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-white font-medium">Q{index + 1}: {question.text}</h3>
-                    <div className={`ml-4 px-2 py-1 rounded text-sm font-semibold ${
-                      submitResult.results[index]?.isCorrect 
-                        ? 'bg-green-600/20 text-green-400' 
-                        : 'bg-red-600/20 text-red-400'
-                    }`}>
-                      {submitResult.results[index]?.isCorrect ? '✓' : '✗'}
+            {/* Group Progress */}
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              {['alpha', 'beta', 'gamma'].map((group) => (
+                <div key={group} className="text-center">
+                  <div className={`p-4 rounded-xl border-2 ${
+                    getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma')
+                      ? 'bg-green-600/20 border-green-500 text-green-400'
+                      : 'bg-gray-700/50 border-gray-600 text-gray-400'
+                  }`}>
+                    <div className="text-xl font-bold mb-2">{group.toUpperCase()}</div>
+                    <div className="text-sm">
+                      {getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma') ? 'Complete' : 'Pending'}
                     </div>
-                  </div>
-                  <div className="text-sm text-gray-300">
-                    <div>Your answer: {question.options[answers[index]]}</div>
-                    {!submitResult.results[index]?.isCorrect && (
-                      <div className="text-green-400">Correct: {question.options[question.correctAnswer]}</div>
-                    )}
-                    {question.explanation && (
-                      <div className="text-gray-400 mt-2 italic">{question.explanation}</div>
-                    )}
                   </div>
                 </div>
               ))}
             </div>
 
             <div className="flex justify-center space-x-4">
-              {!submitResult.allCorrect && (
+              {!submitResult.correct && (
                 <button
-                  onClick={resetQuiz}
+                  onClick={resetGroup}
                   className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
                 >
-                  Try Again
+                  Try {currentGroup.toUpperCase()} Again
                 </button>
               )}
               <button
-                onClick={() => window.location.reload()}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                onClick={() => {
+                  setSubmitResult(null);
+                  if (submitResult.correct) {
+                    // Auto-advance to next group if current group was completed successfully
+                    if (currentGroup === 'alpha') {
+                      switchGroup('beta');
+                    } else if (currentGroup === 'beta') {
+                      switchGroup('gamma');
+                    }
+                    // If gamma is completed, stay on gamma (all groups done)
+                  }
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
               >
-                Refresh Status
+                {submitResult.correct && currentGroup === 'alpha' ? 'Continue to Beta' :
+                 submitResult.correct && currentGroup === 'beta' ? 'Continue to Gamma' :
+                 submitResult.correct && currentGroup === 'gamma' ? 'Character Complete!' :
+                 'Continue'}
               </button>
             </div>
           </div>
@@ -415,8 +508,10 @@ export default function GamePage() {
   }
 
   // Main quiz interface
-  const currentQuestion = questions[currentQuestionIndex];
-  const allAnswered = answers.every(answer => answer !== -1);
+  const currentQuestions = getCurrentQuestions();
+  const currentAnswers = getCurrentAnswers();
+  const currentQuestion = currentQuestions[currentQuestionIndex];
+  const allAnswered = currentAnswers.every(answer => answer !== -1);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
@@ -429,7 +524,7 @@ export default function GamePage() {
               Agent: <span className="text-indigo-400 font-semibold">{studentName}</span>
             </div>
             <div className="md:inline md:ml-2">
-              | Character: <span className="text-yellow-400 font-mono text-lg md:text-xl">{assignedChar}</span>
+              | Target: <span className="text-yellow-400 font-mono text-lg md:text-xl">???</span>
             </div>
             <div className="md:inline md:ml-2">
               | Position: {charPosition}
@@ -439,7 +534,100 @@ export default function GamePage() {
             </div>
           </div>
           <div className="text-xs md:text-sm text-gray-400 mt-2">
-            Solve logic gate circuits to decode your assigned character
+            Solve logic gate circuits group by group to decode your assigned character
+          </div>
+        </div>
+
+        {/* Group Selection Tabs */}
+        <div className="mb-6 md:mb-8">
+          <div className="flex justify-center">
+            <div className="inline-flex bg-gray-800 rounded-lg p-1">
+              {['alpha', 'beta', 'gamma'].map((group) => (
+                <button
+                  key={group}
+                  onClick={() => switchGroup(group as 'alpha' | 'beta' | 'gamma')}
+                  className={`px-4 py-2 rounded-md font-medium text-sm transition-all ${
+                    currentGroup === group
+                      ? 'bg-indigo-600 text-white shadow-lg'
+                      : 'text-gray-400 hover:text-gray-200'
+                  } ${getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma') ? 'border border-green-500' : ''}`}
+                >
+                  {group.toUpperCase()}
+                  {getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma') && (
+                    <span className="ml-1 text-green-400">✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bit Progress Display */}
+        <div className="mb-6 md:mb-8">
+          <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-600">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-white mb-2">Target Bits Progress</h3>
+              <div className="text-sm text-gray-400 mb-3">
+                Your assigned character → 8-bit binary
+              </div>
+              <div className="flex justify-center items-center space-x-1">
+                {/* Alpha bits (0-2) */}
+                <div className="flex space-x-1">
+                  {[0, 1, 2].map((bitIndex) => (
+                    <div
+                      key={`alpha-${bitIndex}`}
+                      className={`w-8 h-8 rounded border-2 flex items-center justify-center font-mono text-sm font-bold ${
+                        alphaCompleted
+                          ? 'bg-green-600/30 border-green-500 text-green-300'
+                          : 'bg-gray-700/50 border-gray-600 text-gray-400'
+                      }`}
+                      title={`Alpha bit ${bitIndex + 1}`}
+                    >
+                      {getBitValue('alpha', bitIndex)}
+                    </div>
+                  ))}
+                </div>
+                <div className="text-gray-500 mx-2">|</div>
+                {/* Beta bits (3-5) */}
+                <div className="flex space-x-1">
+                  {[3, 4, 5].map((bitIndex) => (
+                    <div
+                      key={`beta-${bitIndex}`}
+                      className={`w-8 h-8 rounded border-2 flex items-center justify-center font-mono text-sm font-bold ${
+                        betaCompleted
+                          ? 'bg-green-600/30 border-green-500 text-green-300'
+                          : 'bg-gray-700/50 border-gray-600 text-gray-400'
+                      }`}
+                      title={`Beta bit ${bitIndex - 2}`}
+                    >
+                      {getBitValue('beta', bitIndex - 3)}
+                    </div>
+                  ))}
+                </div>
+                <div className="text-gray-500 mx-2">|</div>
+                {/* Gamma bits (6-7) */}
+                <div className="flex space-x-1">
+                  {[6, 7].map((bitIndex) => (
+                    <div
+                      key={`gamma-${bitIndex}`}
+                      className={`w-8 h-8 rounded border-2 flex items-center justify-center font-mono text-sm font-bold ${
+                        gammaCompleted
+                          ? 'bg-green-600/30 border-green-500 text-green-300'
+                          : 'bg-gray-700/50 border-gray-600 text-gray-400'
+                      }`}
+                      title={`Gamma bit ${bitIndex - 5}`}
+                    >
+                      {getBitValue('gamma', bitIndex - 6)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="text-xs text-gray-400 mt-3">
+                <span className="text-blue-400">Alpha (3 bits)</span> | 
+                <span className="text-purple-400 ml-1">Beta (3 bits)</span> | 
+                <span className="text-yellow-400 ml-1">Gamma (2 bits)</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -447,13 +635,13 @@ export default function GamePage() {
         {/* Question Progress Bar */}
         <div className="mb-6 md:mb-8">
           <div className="flex justify-between text-xs md:text-sm text-gray-400 mb-2">
-            <span>Circuit {currentQuestionIndex + 1} of {questions.length}</span>
-            <span>{answers.filter(a => a !== -1).length} answered</span>
+            <span>{currentGroup.toUpperCase()} Circuit {currentQuestionIndex + 1} of {currentQuestions.length}</span>
+            <span>{currentAnswers.filter(a => a !== -1).length} answered</span>
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2">
             <div 
               className="bg-gradient-to-r from-indigo-500 to-cyan-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+              style={{ width: `${((currentQuestionIndex + 1) / currentQuestions.length) * 100}%` }}
             />
           </div>
         </div>
@@ -464,7 +652,7 @@ export default function GamePage() {
             <SelectQuestion
               question={currentQuestion}
               onAnswerSelect={handleAnswerSelect}
-              selectedAnswer={answers[currentQuestionIndex] !== -1 ? answers[currentQuestionIndex] : undefined}
+              selectedAnswer={currentAnswers[currentQuestionIndex] !== -1 ? currentAnswers[currentQuestionIndex] : undefined}
               disabled={false}
             />
           </div>
@@ -481,14 +669,14 @@ export default function GamePage() {
           </button>
 
           <div className="flex flex-wrap justify-center gap-2 max-w-full">
-            {questions.map((question, index) => (
+            {currentQuestions.map((question, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentQuestionIndex(index)}
                 className={`w-8 h-8 md:w-8 md:h-8 rounded-full font-semibold text-xs md:text-sm transition-colors flex-shrink-0 ${
                   index === currentQuestionIndex
                     ? 'bg-indigo-600 text-white'
-                    : answers[index] !== -1
+                    : currentAnswers[index] !== -1
                     ? 'bg-green-600 text-white'
                     : 'bg-gray-600 text-gray-300'
                 } ${question.isFinal ? 'ring-2 ring-yellow-400' : ''}`}
@@ -499,18 +687,18 @@ export default function GamePage() {
             ))}
           </div>
 
-          {currentQuestionIndex === questions.length - 1 ? (
+          {currentQuestionIndex === currentQuestions.length - 1 ? (
             <button
-              onClick={submitAnswers}
+              onClick={submitGroupAnswers}
               disabled={!allAnswered}
               className="w-full md:w-auto bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-6 py-2 rounded-lg font-semibold transition-colors"
             >
-              Submit All →
+              Submit {currentGroup.toUpperCase()} →
             </button>
           ) : (
             <button
               onClick={goToNextQuestion}
-              disabled={currentQuestionIndex === questions.length - 1}
+              disabled={currentQuestionIndex === currentQuestions.length - 1}
               className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-6 py-2 rounded-lg font-semibold transition-colors"
             >
               Next →
@@ -519,13 +707,13 @@ export default function GamePage() {
         </div>
 
         {/* Submit Button for all questions answered */}
-        {allAnswered && currentQuestionIndex !== questions.length - 1 && (
+        {allAnswered && currentQuestionIndex !== currentQuestions.length - 1 && (
           <div className="mt-6 text-center">
             <button
-              onClick={submitAnswers}
+              onClick={submitGroupAnswers}
               className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors"
             >
-              🚀 Submit All Answers
+              🚀 Submit {currentGroup.toUpperCase()} Group
             </button>
           </div>
         )}

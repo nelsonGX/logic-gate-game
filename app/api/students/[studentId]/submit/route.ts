@@ -10,7 +10,14 @@ export async function POST(
   try {
     const awaitedParams = await params;
     const { studentId } = awaitedParams;
-    const { answers } = await request.json();
+    const { group, answers } = await request.json();
+
+    if (!group || !['alpha', 'beta', 'gamma'].includes(group.toLowerCase())) {
+      return NextResponse.json(
+        { error: 'Valid group (alpha, beta, gamma) is required' },
+        { status: 400 }
+      );
+    }
 
     if (!answers || !Array.isArray(answers)) {
       return NextResponse.json(
@@ -42,90 +49,76 @@ export async function POST(
       );
     }
 
-    // Check if all questions are answered correctly
+    const groupName = group.toLowerCase();
+    
+    // Filter questions for the specific group
+    const groupQuestions = questions.filter((q: { bitGroup: string; }) => 
+      q.bitGroup.toLowerCase() === groupName
+    );
+    
+    if (answers.length !== groupQuestions.length) {
+      return NextResponse.json(
+        { error: `Expected ${groupQuestions.length} answers for ${group} group` },
+        { status: 400 }
+      );
+    }
+
+    // Check if all group questions are answered correctly
     let allCorrect = true;
-    const results = [];
-
-    for (let i = 0; i < questions.length; i++) {
-      const question = questions[i];
+    for (let i = 0; i < groupQuestions.length; i++) {
+      const question = groupQuestions[i];
       const answer = answers[i];
-      const isCorrect = answer === question.correctAnswer;
-      
-      results.push({
-        questionId: question.id,
-        selectedAnswer: answer,
-        correctAnswer: question.correctAnswer,
-        isCorrect,
-      });
-
-      if (!isCorrect) {
+      if (answer !== question.correctAnswer) {
         allCorrect = false;
+        break;
       }
     }
 
-    // Calculate the solved character based on performance
-    // Student must answer ALL questions correctly to unlock their character
-    let solvedChar: string | null = null;
-    let reconstructedBits = '';
+    // Prepare update data for the specific group
+    const updateData: any = {};
     
-    if (allCorrect) {
-      // Reconstruct the 8-bit character from individual question answers
-      // Questions are in order: Alpha (3 bits), Beta (3 bits), Gamma (2 bits)
-      
-      // Alpha group (bits 0-2)
-      for (let i = 0; i < 3; i++) {
-        const questionIndex = i; // Questions 0, 1, 2
-        const answer = answers[questionIndex];
-        reconstructedBits += answer.toString();
-      }
-      
-      // Beta group (bits 3-5) 
-      for (let i = 0; i < 3; i++) {
-        const questionIndex = 3 + i; // Questions 3, 4, 5
-        const answer = answers[questionIndex];
-        reconstructedBits += answer.toString();
-      }
-      
-      // Gamma group (bits 6-7)
-      for (let i = 0; i < 2; i++) {
-        const questionIndex = 6 + i; // Questions 6, 7
-        const answer = answers[questionIndex];
-        reconstructedBits += answer.toString();
-      }
-      
-      // Convert reconstructed bits to character
-      const reconstructedAscii = parseInt(reconstructedBits, 2);
-      const reconstructedChar = String.fromCharCode(reconstructedAscii);
-      
-      // Only unlock if the reconstructed character matches the target
-      if (reconstructedChar === student.assignedChar) {
-        solvedChar = student.assignedChar;
-      }
+    if (groupName === 'alpha') {
+      updateData.alphaAnswers = JSON.stringify(answers);
+      updateData.alphaCompleted = allCorrect;
+    } else if (groupName === 'beta') {
+      updateData.betaAnswers = JSON.stringify(answers);
+      updateData.betaCompleted = allCorrect;
+    } else if (groupName === 'gamma') {
+      updateData.gammaAnswers = JSON.stringify(answers);
+      updateData.gammaCompleted = allCorrect;
+    }
+    
+    // Check if all groups will be completed after this submission
+    const currentStudent = await prisma.student.findUnique({
+      where: { id: studentId }
+    });
+    
+    const alphaWillBeComplete = groupName === 'alpha' ? allCorrect : currentStudent?.alphaCompleted;
+    const betaWillBeComplete = groupName === 'beta' ? allCorrect : currentStudent?.betaCompleted;
+    const gammaWillBeComplete = groupName === 'gamma' ? allCorrect : currentStudent?.gammaCompleted;
+    
+    const allGroupsComplete = alphaWillBeComplete && betaWillBeComplete && gammaWillBeComplete;
+    
+    if (allGroupsComplete) {
+      updateData.solvedChar = student.assignedChar;
+      updateData.isCompleted = true;
+      updateData.completedAt = new Date();
     }
 
     // Update student record
     const updatedStudent = await prisma.student.update({
       where: { id: studentId },
-      data: {
-        answers: JSON.stringify(answers),
-        solvedChar: solvedChar,
-        isCompleted: solvedChar !== null,
-        completedAt: solvedChar !== null ? new Date() : null,
-      },
+      data: updateData,
     });
 
     return NextResponse.json({
       success: true,
-      allCorrect,
-      score: results.filter(r => r.isCorrect).length,
-      totalQuestions: questions.length,
-      solvedChar,
-      assignedChar: student.assignedChar,
-      charPosition: student.charPosition,
-      reconstructedBits: reconstructedBits || 'N/A',
-      targetBits: student.targetBits,
-      results,
-      message: solvedChar ? `Character '${student.assignedChar}' unlocked!` : allCorrect ? 'All correct but character mismatch!' : 'Some answers incorrect. Try again.',
+      group: group,
+      correct: allCorrect,
+      groupCompleted: allCorrect,
+      allGroupsCompleted: allGroupsComplete,
+      characterUnlocked: allGroupsComplete,
+      message: allCorrect ? `${group} group completed!` : `${group} group incorrect. Try again.`,
     });
 
   } catch (error) {
