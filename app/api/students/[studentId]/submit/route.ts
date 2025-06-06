@@ -66,9 +66,41 @@ export async function POST(
     // Calculate the solved character based on performance
     // Student must answer ALL questions correctly to unlock their character
     let solvedChar: string | null = null;
+    let reconstructedBits = '';
+    
     if (allCorrect) {
-      // If all answers are correct, the student has successfully solved their character
-      solvedChar = student.assignedChar;
+      // Reconstruct the 8-bit character from individual question answers
+      // Questions are in order: Alpha (3 bits), Beta (3 bits), Gamma (2 bits)
+      
+      // Alpha group (bits 0-2)
+      for (let i = 0; i < 3; i++) {
+        const questionIndex = i; // Questions 0, 1, 2
+        const answer = answers[questionIndex];
+        reconstructedBits += answer.toString();
+      }
+      
+      // Beta group (bits 3-5) 
+      for (let i = 0; i < 3; i++) {
+        const questionIndex = 3 + i; // Questions 3, 4, 5
+        const answer = answers[questionIndex];
+        reconstructedBits += answer.toString();
+      }
+      
+      // Gamma group (bits 6-7)
+      for (let i = 0; i < 2; i++) {
+        const questionIndex = 6 + i; // Questions 6, 7
+        const answer = answers[questionIndex];
+        reconstructedBits += answer.toString();
+      }
+      
+      // Convert reconstructed bits to character
+      const reconstructedAscii = parseInt(reconstructedBits, 2);
+      const reconstructedChar = String.fromCharCode(reconstructedAscii);
+      
+      // Only unlock if the reconstructed character matches the target
+      if (reconstructedChar === student.assignedChar) {
+        solvedChar = student.assignedChar;
+      }
     }
 
     // Update student record
@@ -77,8 +109,8 @@ export async function POST(
       data: {
         answers: JSON.stringify(answers),
         solvedChar: solvedChar,
-        isCompleted: allCorrect,
-        completedAt: allCorrect ? new Date() : null,
+        isCompleted: solvedChar !== null,
+        completedAt: solvedChar !== null ? new Date() : null,
       },
     });
 
@@ -90,8 +122,10 @@ export async function POST(
       solvedChar,
       assignedChar: student.assignedChar,
       charPosition: student.charPosition,
+      reconstructedBits: reconstructedBits || 'N/A',
+      targetBits: student.targetBits,
       results,
-      message: allCorrect ? `Character '${student.assignedChar}' unlocked!` : 'Some answers incorrect. Try again.',
+      message: solvedChar ? `Character '${student.assignedChar}' unlocked!` : allCorrect ? 'All correct but character mismatch!' : 'Some answers incorrect. Try again.',
     });
 
   } catch (error) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import QRCode from 'qrcode';
 
@@ -10,7 +10,30 @@ export default function Main() {
   const [isLoading, setIsLoading] = useState(false);
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [gameRoom, setGameRoom] = useState<any>(null);
   const router = useRouter();
+
+  // Fetch game room data for student join status
+  const fetchGameRoom = async (roomCode: string) => {
+    try {
+      const response = await fetch(`/api/game/${roomCode}`);
+      if (response.ok) {
+        const data = await response.json();
+        setGameRoom(data);
+      }
+    } catch (error) {
+      console.error('Error fetching game room:', error);
+    }
+  };
+
+  // Poll for updates when room code exists
+  useEffect(() => {
+    if (roomCode) {
+      fetchGameRoom(roomCode);
+      const interval = setInterval(() => fetchGameRoom(roomCode), 3000);
+      return () => clearInterval(interval);
+    }
+  }, [roomCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,8 +146,83 @@ export default function Main() {
               </div>
               
               {qrCodeUrl && (
-                <div className="bg-white rounded-lg p-4 inline-block">
+                <div className="bg-white rounded-lg p-4 inline-block mb-6">
                   <img src={qrCodeUrl} alt="QR Code" className="w-48 h-48" />
+                </div>
+              )}
+
+              {/* Student Join Status */}
+              {gameRoom && (
+                <div className="bg-gray-700/50 rounded-lg p-4 mb-6">
+                  <h3 className="text-lg font-semibold text-white mb-3">Student Join Status</h3>
+                  
+                  {/* Join Progress */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-green-400">
+                        {gameRoom.students?.length || 0}
+                      </div>
+                      <div className="text-xs text-gray-300">Joined</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-yellow-400">
+                        {(gameRoom.studentAmount || 0) - (gameRoom.students?.length || 0)}
+                      </div>
+                      <div className="text-xs text-gray-300">Waiting</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-blue-400">
+                        {gameRoom.studentAmount || 0}
+                      </div>
+                      <div className="text-xs text-gray-300">Total</div>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                      <span>Join Progress</span>
+                      <span>{Math.round(((gameRoom.students?.length || 0) / (gameRoom.studentAmount || 1)) * 100)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-600 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${((gameRoom.students?.length || 0) / (gameRoom.studentAmount || 1)) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Recently Joined Students */}
+                  {gameRoom.students && gameRoom.students.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-300 mb-2">Recent Students:</h4>
+                      <div className="space-y-1 max-h-24 overflow-y-auto">
+                        {gameRoom.students
+                          .slice(-4) // Show last 4 students
+                          .map((student: any) => (
+                            <div key={student.id} className="flex items-center justify-between bg-gray-600/50 rounded-lg p-2">
+                              <div className="flex items-center space-x-2">
+                                <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
+                                <span className="text-sm text-gray-300">{student.displayName}</span>
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                Char {student.charPosition}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Ready Indicator */}
+                  {gameRoom.students?.length === gameRoom.studentAmount && (
+                    <div className="mt-4 p-3 bg-green-600/20 border border-green-500/50 rounded-lg">
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span className="text-green-300 font-semibold">All students joined! Ready to start.</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

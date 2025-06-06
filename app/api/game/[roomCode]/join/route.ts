@@ -47,76 +47,83 @@ function generateCharacterQuestions(character: string, charPosition: number): an
     return validCombinations[Math.floor(Math.random() * validCombinations.length)];
   }
   
-  function generateSimpleQuestion(bitGroup: string, groupName: string): any {
-    // Generate one question that determines all 3 bits of this group
-    const targetBinary = parseInt(bitGroup, 2);
-    const gateType = gateTypes[Math.floor(Math.random() * gateTypes.length)];
+  function generateSimpleQuestion(bitGroup: string, groupName: string): any[] {
+    // Generate one question for each bit in the group (3 bits = 3 questions)
+    const questions = [];
     
-    // For simplicity, we'll make the question determine if the group value is > 3 (middle value)
-    const targetOutput = targetBinary > 3;
-    const inputs = findInputsForTarget(gateType, targetOutput);
+    for (let i = 0; i < bitGroup.length; i++) {
+      const bit = bitGroup[i] === '1';
+      const gateType = gateTypes[Math.floor(Math.random() * gateTypes.length)];
+      const inputs = findInputsForTarget(gateType, bit);
+      
+      questions.push({
+        id: `${groupName.toLowerCase()}_bit_${i}`,
+        type: 'simple_logic_gate',
+        text: `${groupName} Circuit - Bit ${i + 1}: What is the output of this ${gateType} gate?`,
+        gateType,
+        inputs,
+        options: ['0 (False)', '1 (True)'],
+        correctAnswer: bit ? 1 : 0,
+        explanation: `${gateType} gate outputs ${bit ? '1' : '0'}`,
+        targetBit: bit,
+        bitGroup: groupName,
+        bitIndex: i
+      });
+    }
     
-    return {
-      id: `group_${groupName}`,
-      type: 'simple_logic_gate',
-      text: `${groupName} Circuit: What is the output of this ${gateType} gate?`,
-      gateType,
-      inputs,
-      options: ['0 (False)', '1 (True)'],
-      correctAnswer: targetOutput ? 1 : 0,
-      explanation: `${gateType} gate outputs ${targetOutput ? '1' : '0'}`,
-      targetBits: bitGroup,
-      bitGroup: groupName
-    };
+    return questions;
   }
   
-  function generateComplexQuestion(bitGroup: string): any {
-    // Generate a complex multi-gate question for the 2-bit group
-    const bit1 = bitGroup[0] === '1';
-    const bit2 = bitGroup[1] === '1';
+  function generateComplexQuestion(bitGroup: string): any[] {
+    // Generate one question for each bit in the 2-bit group using complex circuits
+    const questions = [];
     
-    // Create a 2-gate circuit: Gate1 -> Gate2 -> Output
-    const gate1Type = complexGateTypes[Math.floor(Math.random() * complexGateTypes.length)];
-    const gate2Type = complexGateTypes[Math.floor(Math.random() * complexGateTypes.length)];
+    for (let i = 0; i < bitGroup.length; i++) {
+      const bit = bitGroup[i] === '1';
+      
+      // Create a 2-gate circuit: Gate1 -> Gate2 -> Output
+      const gate1Type = complexGateTypes[Math.floor(Math.random() * complexGateTypes.length)];
+      const gate2Type = complexGateTypes[Math.floor(Math.random() * complexGateTypes.length)];
+      
+      // Generate inputs for gate1
+      const gate1Inputs = [Math.random() < 0.5, Math.random() < 0.5];
+      const gate1Output = calculateGateOutput(gate1Type, gate1Inputs);
+      
+      // Generate second input for gate2 to produce the target bit
+      const gate2SecondInput = Math.random() < 0.5;
+      const testOutput = calculateGateOutput(gate2Type, [gate1Output, gate2SecondInput]);
+      const finalGate2Input = testOutput === bit ? gate2SecondInput : !gate2SecondInput;
+      
+      questions.push({
+        id: `gamma_bit_${i}`,
+        type: 'complex_logic_gate',
+        text: `Gamma Complex Circuit - Bit ${i + 1}: Calculate the final output`,
+        circuit: {
+          gate1: { type: gate1Type, inputs: gate1Inputs },
+          gate2: { type: gate2Type, inputs: [null, finalGate2Input] } // null will be filled with gate1 output
+        },
+        options: ['0 (False)', '1 (True)'],
+        correctAnswer: bit ? 1 : 0,
+        explanation: `Complex circuit outputs ${bit ? '1' : '0'}`,
+        targetBit: bit,
+        bitGroup: 'Gamma',
+        bitIndex: i,
+        isComplex: true,
+        isFinal: i === bitGroup.length - 1
+      });
+    }
     
-    // Generate inputs for gate1 that will produce bit1
-    const gate1Inputs = findInputsForTarget(gate1Type, bit1);
-    
-    // Generate second input for gate2, gate2 takes output of gate1 + this input to produce bit2
-    const gate2SecondInput = Math.random() < 0.5;
-    
-    // Check if this combination works
-    const gate1Output = calculateGateOutput(gate1Type, gate1Inputs);
-    const gate2Output = calculateGateOutput(gate2Type, [gate1Output, gate2SecondInput]);
-    
-    // If it doesn't match bit2, flip the second input
-    const finalGate2Input = gate2Output === bit2 ? gate2SecondInput : !gate2SecondInput;
-    
-    return {
-      id: 'complex_final',
-      type: 'complex_logic_gate',
-      text: `FINAL CHALLENGE: Calculate the output of this complex circuit`,
-      circuit: {
-        gate1: { type: gate1Type, inputs: gate1Inputs },
-        gate2: { type: gate2Type, inputs: [null, finalGate2Input] } // null will be filled with gate1 output
-      },
-      options: ['0 (False)', '1 (True)'],
-      correctAnswer: bit2 ? 1 : 0,
-      explanation: `Complex circuit outputs ${bit2 ? '1' : '0'}`,
-      targetBits: bitGroup,
-      isComplex: true,
-      isFinal: true
-    };
+    return questions;
   }
   
   const questions = [];
   
   // Generate simple questions for first two groups (3 bits each)
-  questions.push(generateSimpleQuestion(firstGroup, 'Alpha'));
-  questions.push(generateSimpleQuestion(secondGroup, 'Beta'));
+  questions.push(...generateSimpleQuestion(firstGroup, 'Alpha'));
+  questions.push(...generateSimpleQuestion(secondGroup, 'Beta'));
   
-  // Generate complex question for final group (2 bits)
-  questions.push(generateComplexQuestion(thirdGroup));
+  // Generate complex questions for final group (2 bits)
+  questions.push(...generateComplexQuestion(thirdGroup));
   
   return questions;
 }

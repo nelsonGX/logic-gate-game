@@ -239,12 +239,72 @@ export default function GamePage() {
                 🔬 Logic Gate Escape Room
               </h1>
               <p className="text-gray-300 mt-2">Room: {gameRoom?.roomCode}</p>
-              <p className="text-sm text-gray-400 mt-1">
-                {gameRoom?.students.length || 0} / {gameRoom?.studentAmount || 0} agents joined
-              </p>
               <p className="text-xs text-gray-500 mt-2">
                 Each agent solves logic gate puzzles to contribute bits to the escape code
               </p>
+            </div>
+
+            {/* Student Join Status */}
+            <div className="bg-gray-700/30 rounded-xl p-6 mb-6">
+              <h3 className="text-lg font-semibold text-white mb-4 text-center">Agent Status</h3>
+              
+              {/* Join Progress */}
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-400">
+                    {gameRoom?.students.length || 0}
+                  </div>
+                  <div className="text-xs text-gray-300">Joined</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-400">
+                    {(gameRoom?.studentAmount || 0) - (gameRoom?.students.length || 0)}
+                  </div>
+                  <div className="text-xs text-gray-300">Waiting</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-400">
+                    {gameRoom?.studentAmount || 0}
+                  </div>
+                  <div className="text-xs text-gray-300">Total</div>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="flex justify-between text-xs text-gray-400 mb-1">
+                  <span>Join Progress</span>
+                  <span>{Math.round(((gameRoom?.students.length || 0) / (gameRoom?.studentAmount || 1)) * 100)}%</span>
+                </div>
+                <div className="w-full bg-gray-600 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${((gameRoom?.students.length || 0) / (gameRoom?.studentAmount || 1)) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Recently Joined */}
+              {gameRoom && gameRoom.students.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-300 mb-2">Recent Agents:</h4>
+                  <div className="space-y-1 max-h-20 overflow-y-auto">
+                    {gameRoom.students
+                      .slice(-3) // Show last 3 students
+                      .map((student) => (
+                        <div key={student.id} className="flex items-center justify-between bg-gray-600/50 rounded-lg p-2">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                            <span className="text-sm text-gray-300">{student.displayName}</span>
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            Char {student.charPosition}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="space-y-6">
@@ -304,10 +364,6 @@ export default function GamePage() {
               )}
             </div>
 
-            {/* Global Progress Update */}
-            <div className="mb-8">
-              <ProgressDisplay />
-            </div>
 
             {/* Question Results */}
             <div className="space-y-4 mb-8">
@@ -378,10 +434,6 @@ export default function GamePage() {
           </div>
         </div>
 
-        {/* Global Progress Display */}
-        <div className="mb-8">
-          <ProgressDisplay />
-        </div>
 
         {/* Question Progress Bar */}
         <div className="mb-8">

@@ -6,8 +6,10 @@ import { useParams } from 'next/navigation';
 interface Student {
   id: string;
   displayName: string;
-  assignedBits: string;
-  solvedBits: string | null;
+  assignedChar: string;
+  charPosition: number;
+  targetBits: string;
+  solvedChar: string | null;
   isCompleted: boolean;
   completedAt: string | null;
 }
@@ -58,14 +60,6 @@ export default function HostView() {
     return (completedStudents / gameRoom.students.length) * 100;
   };
 
-  const parseBits = (bitsString: string | null): number[] => {
-    if (!bitsString) return [];
-    try {
-      return JSON.parse(bitsString);
-    } catch {
-      return [];
-    }
-  };
 
   if (loading) {
     return (
@@ -91,7 +85,7 @@ export default function HostView() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-                Host Dashboard
+                🔬 Logic Gate Escape Room
               </h1>
               <p className="text-gray-300 mt-1">Room: {gameRoom?.roomCode} | Team: {gameRoom?.team}</p>
             </div>
@@ -118,26 +112,62 @@ export default function HostView() {
           </div>
         </div>
 
-        {/* Target Answer */}
+
+        {/* Escape Code Progress Display */}
         <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 mb-6">
-          <h2 className="text-xl font-bold text-white mb-4">Target Answer</h2>
-          <div className="flex items-center space-x-4">
-            <div className="font-mono text-3xl text-green-400 bg-gray-700 px-4 py-2 rounded-lg">
-              {gameRoom?.answerString}
+          <h2 className="text-xl font-bold text-white mb-4">🔓 Escape Code Progress</h2>
+          <div className="text-center">
+            <div className="flex justify-center items-center space-x-2 mb-4">
+              {Array.from({ length: gameRoom?.answerString.length || 0 }, (_, index) => {
+                const student = gameRoom?.students.find(s => s.charPosition === index);
+                const displayChar = student?.isCompleted ? student.solvedChar : '_';
+                const isCompleted = student?.isCompleted || false;
+                const isWorking = student && !isCompleted;
+                
+                return (
+                  <div key={index} className="flex flex-col items-center">
+                    <span
+                      className={`font-mono text-3xl px-3 py-2 mx-1 rounded-lg border-2 ${
+                        isCompleted 
+                          ? 'bg-green-600/30 text-green-300 border-green-500' 
+                          : isWorking
+                          ? 'bg-blue-600/30 text-blue-300 border-blue-500 animate-pulse'
+                          : 'bg-gray-700/50 text-gray-400 border-gray-600'
+                      }`}
+                      title={student ? `${student.displayName}: ${isCompleted ? 'Completed' : 'Working...'}` : 'No student assigned'}
+                    >
+                      {displayChar}
+                    </span>
+                    <span className="text-xs text-gray-400 mt-1">Pos {index}</span>
+                  </div>
+                );
+              })}
             </div>
-            <div className="text-gray-300">
-              <div className="text-sm">8-bit binary pattern</div>
-              <div className="text-xs">Students must build circuits to match this output</div>
+            <div className="text-sm text-gray-400 mb-3">
+              {gameRoom?.students.filter(s => s.isCompleted).length} / {gameRoom?.students.length} characters decoded
             </div>
+            
+            {/* Show completed message if all done */}
+            {gameRoom && gameRoom.students.length > 0 && 
+             gameRoom.students.filter(s => s.isCompleted).length === gameRoom.students.length && (
+              <div className="bg-green-900/30 border border-green-500/50 rounded-lg p-4 mt-4">
+                <div className="text-green-300 font-bold text-lg mb-2">🎉 Escape Code Complete!</div>
+                <div className="text-green-400">All agents have successfully decoded their characters!</div>
+                <div className="font-mono text-2xl text-green-300 mt-2 tracking-wider">
+                  {gameRoom.students
+                    .sort((a, b) => a.charPosition - b.charPosition)
+                    .map(s => s.solvedChar || '?')
+                    .join('')}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Students Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array.from({ length: gameRoom?.studentAmount || 0 }, (_, index) => {
-            const student = gameRoom?.students.find(s => 
-              parseBits(s.assignedBits).includes(index)
-            );
+            const student = gameRoom?.students.find(s => s.charPosition === index);
             
             return (
               <div
@@ -152,7 +182,7 @@ export default function HostView() {
               >
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-white">
-                    Bit {index}
+                    Character {index}
                   </h3>
                   <div className={`w-3 h-3 rounded-full ${
                     student?.isCompleted 
@@ -173,10 +203,10 @@ export default function HostView() {
                         student.isCompleted ? 'Completed' : 'Working...'
                       }
                     </div>
-                    {student.solvedBits && (
-                      <div className="text-sm text-gray-300">
-                        <strong>Result:</strong> 
-                        <span className="font-mono ml-1">{student.solvedBits}</span>
+                    {student.solvedChar && (
+                      <div className="text-sm text-green-300">
+                        <strong>Decoded:</strong> 
+                        <span className="font-mono ml-1 text-lg">{student.solvedChar}</span>
                       </div>
                     )}
                     {student.completedAt && (
@@ -193,6 +223,67 @@ export default function HostView() {
               </div>
             );
           })}
+        </div>
+
+        {/* Student Join Status */}
+        <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 mt-6">
+          <h2 className="text-xl font-bold text-white mb-4">Student Join Status</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div className="bg-gray-700/50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-green-400">
+                {gameRoom?.students.length || 0}
+              </div>
+              <div className="text-sm text-gray-300">Students Joined</div>
+            </div>
+            <div className="bg-gray-700/50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-blue-400">
+                {(gameRoom?.studentAmount || 0) - (gameRoom?.students.length || 0)}
+              </div>
+              <div className="text-sm text-gray-300">Waiting to Join</div>
+            </div>
+            <div className="bg-gray-700/50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-yellow-400">
+                {gameRoom?.studentAmount || 0}
+              </div>
+              <div className="text-sm text-gray-300">Total Expected</div>
+            </div>
+          </div>
+          
+          {/* Recently Joined Students */}
+          {gameRoom && gameRoom.students.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-white mb-3">Recently Joined Students</h3>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {gameRoom.students
+                  .slice(-5) // Show last 5 students
+                  .map((student) => (
+                    <div key={student.id} className="flex items-center justify-between bg-gray-700/30 rounded-lg p-2">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span className="text-gray-300">{student.displayName}</span>
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        Character {student.charPosition}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Join Progress Bar */}
+          <div className="mb-4">
+            <div className="flex justify-between text-sm text-gray-300 mb-2">
+              <span>Join Progress</span>
+              <span>{Math.round(((gameRoom?.students.length || 0) / (gameRoom?.studentAmount || 1)) * 100)}%</span>
+            </div>
+            <div className="w-full bg-gray-700 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${((gameRoom?.students.length || 0) / (gameRoom?.studentAmount || 1)) * 100}%` }}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Game URL */}
