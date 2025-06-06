@@ -63,20 +63,20 @@ export async function POST(
       }
     }
 
-    // Calculate the solved bit based on performance
-    const assignedBits = JSON.parse(student.assignedBits);
-    const bitPosition = assignedBits[0]; // Assuming one bit per student
-    const targetBit = student.gameRoom.answerString[bitPosition] === '1';
-    
-    // Student gets their target bit if they answer everything correctly
-    const solvedBit = allCorrect ? (targetBit ? '1' : '0') : '0';
+    // Calculate the solved character based on performance
+    // Student must answer ALL questions correctly to unlock their character
+    let solvedChar: string | null = null;
+    if (allCorrect) {
+      // If all answers are correct, the student has successfully solved their character
+      solvedChar = student.assignedChar;
+    }
 
     // Update student record
     const updatedStudent = await prisma.student.update({
       where: { id: studentId },
       data: {
         answers: JSON.stringify(answers),
-        solvedBits: solvedBit,
+        solvedChar: solvedChar,
         isCompleted: allCorrect,
         completedAt: allCorrect ? new Date() : null,
       },
@@ -87,9 +87,11 @@ export async function POST(
       allCorrect,
       score: results.filter(r => r.isCorrect).length,
       totalQuestions: questions.length,
-      solvedBit,
+      solvedChar,
+      assignedChar: student.assignedChar,
+      charPosition: student.charPosition,
       results,
-      message: allCorrect ? 'All answers correct! Bit unlocked.' : 'Some answers incorrect. Try again.',
+      message: allCorrect ? `Character '${student.assignedChar}' unlocked!` : 'Some answers incorrect. Try again.',
     });
 
   } catch (error) {

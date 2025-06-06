@@ -3,103 +3,122 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-function generateQuestionsForBit(bitPosition: number, targetBit: boolean): any[] {
-  const questionPools = [
-    // Math/Logic Questions
-    {
-      text: "What is the result of the binary operation 1010 AND 1100?",
-      options: ["1000", "1110", "0010", "1111"],
-      correctAnswer: 0,
-      explanation: "Binary AND: 1010 & 1100 = 1000 (only positions where both bits are 1)"
-    },
-    {
-      text: "If you have a 3-bit binary number, what's the maximum decimal value?",
-      options: ["6", "7", "8", "9"],
-      correctAnswer: 1,
-      explanation: "3 bits can represent 2³ = 8 values (0-7), so maximum is 7"
-    },
-    {
-      text: "What does the hexadecimal value F represent in decimal?",
-      options: ["14", "15", "16", "17"],
-      correctAnswer: 1,
-      explanation: "Hex F = decimal 15"
-    },
-    
-    // Cipher/Code Questions
-    {
-      text: "In a Caesar cipher with shift 3, what does 'DEF' encode to?",
-      options: ["GHI", "ABC", "JKL", "MNO"],
-      correctAnswer: 0,
-      explanation: "Each letter shifts forward 3 positions: D→G, E→H, F→I"
-    },
-    {
-      text: "What number comes next in the sequence: 2, 4, 8, 16, ?",
-      options: ["24", "32", "20", "18"],
-      correctAnswer: 1,
-      explanation: "Each number doubles: 2×2=4, 4×2=8, 8×2=16, 16×2=32"
-    },
-    {
-      text: "If A=1, B=2, C=3... what does 'CODE' sum to?",
-      options: ["31", "32", "33", "34"],
-      correctAnswer: 0,
-      explanation: "C(3) + O(15) + D(4) + E(5) = 27, but using 0-indexing: C(2) + O(14) + D(3) + E(4) = 23"
-    },
-    
-    // Pattern Recognition
-    {
-      text: "Which pattern completes the sequence: ○●○●○?",
-      options: ["○", "●", "◯", "◉"],
-      correctAnswer: 1,
-      explanation: "Alternating pattern: circle, filled circle, circle, filled circle, circle, [filled circle]"
-    },
-    {
-      text: "In binary, what's the next number after 101?",
-      options: ["110", "111", "100", "102"],
-      correctAnswer: 0,
-      explanation: "Binary 101 = decimal 5, next is 6 = binary 110"
-    },
-    {
-      text: "What's the missing piece in: 1, 1, 2, 3, 5, ?",
-      options: ["7", "8", "9", "10"],
-      correctAnswer: 1,
-      explanation: "Fibonacci sequence: each number is sum of previous two (3+5=8)"
-    }
-  ];
-
-  // Select 3-5 random questions
-  const selectedQuestions = [];
-  const questionCount = 3 + Math.floor(Math.random() * 3); // 3-5 questions
-  const usedIndexes = new Set();
+function generateCharacterQuestions(character: string, charPosition: number): any[] {
+  // Convert character to 8-bit ASCII
+  const ascii = character.charCodeAt(0);
+  const binaryString = ascii.toString(2).padStart(8, '0');
   
-  for (let i = 0; i < questionCount; i++) {
-    let randomIndex;
-    do {
-      randomIndex = Math.floor(Math.random() * questionPools.length);
-    } while (usedIndexes.has(randomIndex));
-    
-    usedIndexes.add(randomIndex);
-    selectedQuestions.push({
-      id: `q${i + 1}`,
-      ...questionPools[randomIndex]
-    });
+  // Split into 3-3-2 bits
+  const firstGroup = binaryString.substring(0, 3);  // bits 0-2
+  const secondGroup = binaryString.substring(3, 6); // bits 3-5
+  const thirdGroup = binaryString.substring(6, 8);  // bits 6-7
+  
+  const gateTypes = ['AND', 'OR', 'NOT', 'XOR'];
+  const complexGateTypes = ['NAND', 'NOR', 'XOR'];
+  
+  function calculateGateOutput(gateType: string, inputs: boolean[]): boolean {
+    switch (gateType) {
+      case 'AND': return inputs[0] && inputs[1];
+      case 'OR': return inputs[0] || inputs[1];
+      case 'NOT': return !inputs[0];
+      case 'XOR': return inputs[0] !== inputs[1];
+      case 'NAND': return !(inputs[0] && inputs[1]);
+      case 'NOR': return !(inputs[0] || inputs[1]);
+      default: return false;
+    }
   }
   
-  // Add one trick question that determines the bit value
-  const trickQuestion = {
-    id: 'final',
-    text: `To unlock this section, choose the ${targetBit ? 'TRUE' : 'FALSE'} statement:`,
-    options: [
-      targetBit ? "This door requires a digital key" : "This door opens manually",
-      targetBit ? "Security protocols are active" : "Security is disabled", 
-      targetBit ? "Power circuits are energized" : "All systems are offline",
-      "None of the above"
-    ],
-    correctAnswer: targetBit ? Math.floor(Math.random() * 3) : 3,
-    explanation: `Your bit position ${bitPosition} needs to be ${targetBit ? '1' : '0'} for the escape sequence.`
-  };
+  function findInputsForTarget(gateType: string, targetOutput: boolean): boolean[] {
+    if (gateType === 'NOT') {
+      return [!targetOutput];
+    }
+    
+    const allCombinations = [
+      [false, false],
+      [false, true],
+      [true, false],
+      [true, true]
+    ];
+    
+    const validCombinations = allCombinations.filter(inputs => 
+      calculateGateOutput(gateType, inputs) === targetOutput
+    );
+    
+    return validCombinations[Math.floor(Math.random() * validCombinations.length)];
+  }
   
-  selectedQuestions.push(trickQuestion);
-  return selectedQuestions;
+  function generateSimpleQuestion(bitGroup: string, groupName: string): any {
+    // Generate one question that determines all 3 bits of this group
+    const targetBinary = parseInt(bitGroup, 2);
+    const gateType = gateTypes[Math.floor(Math.random() * gateTypes.length)];
+    
+    // For simplicity, we'll make the question determine if the group value is > 3 (middle value)
+    const targetOutput = targetBinary > 3;
+    const inputs = findInputsForTarget(gateType, targetOutput);
+    
+    return {
+      id: `group_${groupName}`,
+      type: 'simple_logic_gate',
+      text: `${groupName} Circuit: What is the output of this ${gateType} gate?`,
+      gateType,
+      inputs,
+      options: ['0 (False)', '1 (True)'],
+      correctAnswer: targetOutput ? 1 : 0,
+      explanation: `${gateType} gate outputs ${targetOutput ? '1' : '0'}`,
+      targetBits: bitGroup,
+      bitGroup: groupName
+    };
+  }
+  
+  function generateComplexQuestion(bitGroup: string): any {
+    // Generate a complex multi-gate question for the 2-bit group
+    const bit1 = bitGroup[0] === '1';
+    const bit2 = bitGroup[1] === '1';
+    
+    // Create a 2-gate circuit: Gate1 -> Gate2 -> Output
+    const gate1Type = complexGateTypes[Math.floor(Math.random() * complexGateTypes.length)];
+    const gate2Type = complexGateTypes[Math.floor(Math.random() * complexGateTypes.length)];
+    
+    // Generate inputs for gate1 that will produce bit1
+    const gate1Inputs = findInputsForTarget(gate1Type, bit1);
+    
+    // Generate second input for gate2, gate2 takes output of gate1 + this input to produce bit2
+    const gate2SecondInput = Math.random() < 0.5;
+    
+    // Check if this combination works
+    const gate1Output = calculateGateOutput(gate1Type, gate1Inputs);
+    const gate2Output = calculateGateOutput(gate2Type, [gate1Output, gate2SecondInput]);
+    
+    // If it doesn't match bit2, flip the second input
+    const finalGate2Input = gate2Output === bit2 ? gate2SecondInput : !gate2SecondInput;
+    
+    return {
+      id: 'complex_final',
+      type: 'complex_logic_gate',
+      text: `FINAL CHALLENGE: Calculate the output of this complex circuit`,
+      circuit: {
+        gate1: { type: gate1Type, inputs: gate1Inputs },
+        gate2: { type: gate2Type, inputs: [null, finalGate2Input] } // null will be filled with gate1 output
+      },
+      options: ['0 (False)', '1 (True)'],
+      correctAnswer: bit2 ? 1 : 0,
+      explanation: `Complex circuit outputs ${bit2 ? '1' : '0'}`,
+      targetBits: bitGroup,
+      isComplex: true,
+      isFinal: true
+    };
+  }
+  
+  const questions = [];
+  
+  // Generate simple questions for first two groups (3 bits each)
+  questions.push(generateSimpleQuestion(firstGroup, 'Alpha'));
+  questions.push(generateSimpleQuestion(secondGroup, 'Beta'));
+  
+  // Generate complex question for final group (2 bits)
+  questions.push(generateComplexQuestion(thirdGroup));
+  
+  return questions;
 }
 
 export async function POST(
@@ -137,36 +156,35 @@ export async function POST(
       );
     }
 
-    // Find next available bit position
-    const assignedBits = gameRoom.students.map(s => {
-      try {
-        return JSON.parse(s.assignedBits);
-      } catch {
-        return [];
-      }
-    }).flat();
-
-    let nextBit = 0;
-    while (assignedBits.includes(nextBit) && nextBit < gameRoom.studentAmount) {
-      nextBit++;
+    // Find next available character position
+    const assignedPositions = gameRoom.students.map(s => s.charPosition);
+    let nextPosition = 0;
+    while (assignedPositions.includes(nextPosition) && nextPosition < gameRoom.answerString.length) {
+      nextPosition++;
     }
 
-    if (nextBit >= gameRoom.studentAmount) {
+    if (nextPosition >= gameRoom.answerString.length) {
       return NextResponse.json(
-        { error: 'No available bit positions' },
+        { error: 'No available character positions' },
         { status: 400 }
       );
     }
 
-    // Generate questions for the student
-    const targetBit = gameRoom.answerString[nextBit] === '1';
-    const questions = generateQuestionsForBit(nextBit, targetBit);
+    // Get the character this student needs to solve
+    const assignedChar = gameRoom.answerString[nextPosition];
+    const ascii = assignedChar.charCodeAt(0);
+    const targetBits = ascii.toString(2).padStart(8, '0');
+    
+    // Generate character-based questions
+    const questions = generateCharacterQuestions(assignedChar, nextPosition);
 
     const student = await prisma.student.create({
       data: {
         gameRoomId: gameRoom.id,
         displayName: displayName.trim(),
-        assignedBits: JSON.stringify([nextBit]),
+        assignedChar: assignedChar,
+        charPosition: nextPosition,
+        targetBits: targetBits,
         questions: JSON.stringify(questions),
         isCompleted: false,
       },
@@ -174,7 +192,9 @@ export async function POST(
 
     return NextResponse.json({
       studentId: student.id,
-      assignedBit: nextBit,
+      assignedChar: assignedChar,
+      charPosition: nextPosition,
+      targetBits: targetBits,
       questions,
       message: 'Successfully joined the game',
     });

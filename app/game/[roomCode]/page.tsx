@@ -17,18 +17,24 @@ interface GameRoom {
 interface Student {
   id: string;
   displayName: string;
-  assignedBits: string;
-  solvedBits: string | null;
+  assignedChar: string;
+  charPosition: number;
+  targetBits: string;
+  solvedChar: string | null;
   isCompleted: boolean;
   completedAt: string | null;
 }
 
 interface Question {
   id: string;
+  type?: string;
   text: string;
+  gateType?: string;
+  inputs?: boolean[];
   options: string[];
   correctAnswer: number;
   explanation?: string;
+  isFinal?: boolean;
 }
 
 export default function GamePage() {
@@ -40,7 +46,8 @@ export default function GamePage() {
   const [studentName, setStudentName] = useState('');
   const [isJoined, setIsJoined] = useState(false);
   const [studentId, setStudentId] = useState<string | null>(null);
-  const [assignedBit, setAssignedBit] = useState<number | null>(null);
+  const [assignedChar, setAssignedChar] = useState<string | null>(null);
+  const [charPosition, setCharPosition] = useState<number | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<number[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -88,7 +95,8 @@ export default function GamePage() {
       if (response.ok) {
         const data = await response.json();
         setStudentId(data.studentId);
-        setAssignedBit(data.assignedBit);
+        setAssignedChar(data.assignedChar);
+        setCharPosition(data.charPosition);
         setQuestions(data.questions);
         setAnswers(new Array(data.questions.length).fill(-1));
         setIsJoined(true);
@@ -157,6 +165,46 @@ export default function GamePage() {
     setSubmitResult(null);
   };
 
+  // Progress display component
+  const ProgressDisplay = () => {
+    if (!gameRoom) return null;
+
+    const displayChars = [];
+    for (let i = 0; i < gameRoom.answerString.length; i++) {
+      const student = gameRoom.students.find(s => s.charPosition === i);
+      const char = student?.solvedChar || '_';
+      const isCompleted = student?.isCompleted || false;
+      
+      displayChars.push(
+        <span
+          key={i}
+          className={`font-mono text-2xl px-2 py-1 mx-1 rounded ${
+            isCompleted 
+              ? 'bg-green-600/30 text-green-300 border border-green-500' 
+              : 'bg-gray-700/50 text-gray-400 border border-gray-600'
+          }`}
+          title={student ? `${student.displayName}: ${isCompleted ? 'Completed' : 'Working...'}` : 'No student assigned'}
+        >
+          {char}
+        </span>
+      );
+    }
+
+    return (
+      <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-600">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-white mb-2">Escape Code Progress</h3>
+          <div className="flex justify-center items-center flex-wrap">
+            {displayChars}
+          </div>
+          <div className="text-sm text-gray-400 mt-2">
+            {gameRoom.students.filter(s => s.isCompleted).length} / {gameRoom.students.length} characters unlocked
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
@@ -188,11 +236,14 @@ export default function GamePage() {
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-                🔓 Escape Room
+                🔬 Logic Gate Escape Room
               </h1>
               <p className="text-gray-300 mt-2">Room: {gameRoom?.roomCode}</p>
               <p className="text-sm text-gray-400 mt-1">
-                {gameRoom?.students.length || 0} / {gameRoom?.studentAmount || 0} students joined
+                {gameRoom?.students.length || 0} / {gameRoom?.studentAmount || 0} agents joined
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                Each agent solves logic gate puzzles to contribute bits to the escape code
               </p>
             </div>
             
@@ -235,14 +286,27 @@ export default function GamePage() {
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-white mb-4">
-                {submitResult.allCorrect ? '🎉 Section Unlocked!' : '❌ Access Denied'}
+                {submitResult.allCorrect ? '🎉 Character Decoded!' : '❌ Decoding Failed'}
               </h1>
               <div className="text-xl text-gray-300 mb-2">
                 Score: {submitResult.score} / {submitResult.totalQuestions}
               </div>
-              <div className="text-lg text-indigo-400">
-                Your bit #{assignedBit}: <span className="font-mono text-2xl">{submitResult.solvedBit}</span>
+              <div className="text-lg text-indigo-400 mb-4">
+                Character '{assignedChar}' at position {charPosition}: 
+                <span className={`font-mono text-3xl ml-2 ${submitResult.allCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                  {submitResult.allCorrect ? '✓' : '✗'}
+                </span>
               </div>
+              {submitResult.allCorrect && (
+                <div className="text-sm text-green-400">
+                  Your character has been added to the escape code!
+                </div>
+              )}
+            </div>
+
+            {/* Global Progress Update */}
+            <div className="mb-8">
+              <ProgressDisplay />
             </div>
 
             {/* Question Results */}
@@ -303,17 +367,26 @@ export default function GamePage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-white mb-2">🔓 Escape Room Challenge</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">🔬 Character Decoder Challenge</h1>
           <div className="text-gray-300">
             Agent: <span className="text-indigo-400 font-semibold">{studentName}</span> | 
-            Bit #{assignedBit} | Room: {gameRoom?.roomCode}
+            Character: <span className="text-yellow-400 font-mono text-xl">{assignedChar}</span> | 
+            Position: {charPosition} | Room: {gameRoom?.roomCode}
+          </div>
+          <div className="text-sm text-gray-400 mt-2">
+            Solve logic gate circuits to decode your assigned character
           </div>
         </div>
 
-        {/* Progress Bar */}
+        {/* Global Progress Display */}
+        <div className="mb-8">
+          <ProgressDisplay />
+        </div>
+
+        {/* Question Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between text-sm text-gray-400 mb-2">
-            <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
+            <span>Circuit {currentQuestionIndex + 1} of {questions.length}</span>
             <span>{answers.filter(a => a !== -1).length} answered</span>
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2">
@@ -347,7 +420,7 @@ export default function GamePage() {
           </button>
 
           <div className="flex space-x-2">
-            {questions.map((_, index) => (
+            {questions.map((question, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentQuestionIndex(index)}
@@ -357,9 +430,10 @@ export default function GamePage() {
                     : answers[index] !== -1
                     ? 'bg-green-600 text-white'
                     : 'bg-gray-600 text-gray-300'
-                }`}
+                } ${question.isFinal ? 'ring-2 ring-yellow-400' : ''}`}
+                title={question.isFinal ? 'Final Question - Determines Your Bit' : `Question ${index + 1}`}
               >
-                {index + 1}
+                {question.isFinal ? '🔑' : index + 1}
               </button>
             ))}
           </div>

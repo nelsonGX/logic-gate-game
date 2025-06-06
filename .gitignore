@@ -44,3 +44,5 @@ prisma/dev.db-journal
 prisma/migrations/20250606093302_dev/migration.sql
 prisma/migrations/migration_lock.toml
 package-lock.json
+/prisma/migrations
+/prisma/migrations

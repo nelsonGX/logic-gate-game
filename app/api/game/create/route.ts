@@ -7,8 +7,14 @@ function generateRoomCode(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-function generateAnswerString(): string {
-  return Math.random().toString(2).substring(2, 10).padEnd(8, '0');
+function generateRandomString(length: number): string {
+  // Generate a random string of uppercase letters for the escape code
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 }
 
 export async function POST(request: NextRequest) {
@@ -23,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const roomCode = generateRoomCode();
-    const answerString = generateAnswerString();
+    const answerString = generateRandomString(numStudents);
 
     const gameRoom = await prisma.gameRoom.create({
       data: {

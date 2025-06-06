@@ -21,15 +21,17 @@ model GameRoom {
 }
 
 model Student {
-  id            String     @id @default(uuid())
-  gameRoomId    String
-  displayName   String
-  assignedBits  String     // JSON string: ["0","1","2"] (bit positions)
-  solvedBits    String?    // Binary result: "101"
-  questions     String     // JSON array of questions with answers
-  answers       String?    // JSON array of student's answers
-  isCompleted   Boolean    @default(false)
-  completedAt   DateTime?
+  id              String     @id @default(uuid())
+  gameRoomId      String
+  displayName     String
+  assignedChar    String     // The character this student must solve (e.g., "A")
+  charPosition    Int        // Position in the target string (0-based)
+  targetBits      String     // 8-bit ASCII representation (e.g., "01000001")
+  solvedChar      String?    // The solved character (null until completed)
+  questions       String     // JSON array of questions with answers
+  answers         String?    // JSON array of student's answers
+  isCompleted     Boolean    @default(false)
+  completedAt     DateTime?
   
-  gameRoom      GameRoom   @relation(fields: [gameRoomId], references: [id])
+  gameRoom        GameRoom   @relation(fields: [gameRoomId], references: [id])
 }
