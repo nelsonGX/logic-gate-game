@@ -26,7 +26,8 @@ model Student {
   displayName   String
   assignedBits  String     // JSON string: ["0","1","2"] (bit positions)
   solvedBits    String?    // Binary result: "101"
-  puzzleData    String     // JSON puzzle configuration
+  questions     String     // JSON array of questions with answers
+  answers       String?    // JSON array of student's answers
   isCompleted   Boolean    @default(false)
   completedAt   DateTime?
   
