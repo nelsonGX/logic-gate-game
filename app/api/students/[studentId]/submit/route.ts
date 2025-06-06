@@ -75,6 +75,7 @@ export async function POST(
     }
 
     // Prepare update data for the specific group
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
     
     if (groupName === 'alpha') {
@@ -106,6 +107,7 @@ export async function POST(
     }
 
     // Update student record
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const updatedStudent = await prisma.student.update({
       where: { id: studentId },
       data: updateData,
