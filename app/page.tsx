@@ -149,7 +149,7 @@ export default function Main() {
               
               {qrCodeUrl && (
                 <div className="bg-white rounded-lg p-4 inline-block mb-6">
-                  <Image src={qrCodeUrl} alt="QR Code" className="w-48 h-48" />
+                  <Image src={qrCodeUrl} alt="QR Code" className="w-48 h-48" width={48} height={48} />
                 </div>
               )}
 
