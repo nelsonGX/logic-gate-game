@@ -235,7 +235,7 @@ export default function Main() {
                 onClick={() => router.push(`/host/${roomCode}`)}
                 className="w-full bg-gradient-to-r from-indigo-600 to-cyan-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-all duration-200"
               >
-                開啟主持人儀表板
+Open Host Dashboard
               </button>
               
               <button
