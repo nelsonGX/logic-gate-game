@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { studentId: string } }
+  { params }: any
 ) {
   try {
     const awaitedParams = await params;

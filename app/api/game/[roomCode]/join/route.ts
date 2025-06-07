@@ -130,7 +130,7 @@ function generateCharacterQuestions(character: string, charPosition: number): an
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { roomCode: string } }
+  { params }: any
 ) {
   try {
     const awaitedParams = await params;
