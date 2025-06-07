@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import SelectQuestion from '../../components/SelectQuestion';
 
 interface GameRoom {
@@ -44,7 +44,9 @@ interface Question {
 
 export default function GamePage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const roomCode = params.roomCode as string;
+  const studentIdFromUrl = searchParams.get('studentId');
   const [gameRoom, setGameRoom] = useState<GameRoom | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,11 +69,17 @@ export default function GamePage() {
 
   useEffect(() => {
     fetchGameRoom();
+    
+    // If there's a studentId in URL, fetch student data
+    if (studentIdFromUrl && !isJoined) {
+      fetchStudentData(studentIdFromUrl);
+    }
+    
     if (isJoined) {
       const interval = setInterval(fetchGameRoom, 3000);
       return () => clearInterval(interval);
     }
-  }, [roomCode, isJoined]);
+  }, [roomCode, studentIdFromUrl, isJoined]);
 
   const fetchGameRoom = async () => {
     try {
@@ -86,6 +94,52 @@ export default function GamePage() {
       setError('載入遊戲失敗');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStudentData = async (studentId: string) => {
+    try {
+      const response = await fetch(`/api/students/${studentId}`);
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Verify the student belongs to this room
+        if (data.gameRoom.roomCode !== roomCode) {
+          setError('學生不屬於此房間');
+          return;
+        }
+        
+        // Set student data
+        setStudentId(data.id);
+        setStudentName(data.displayName);
+        setAssignedChar(data.assignedChar);
+        setCharPosition(data.charPosition);
+        setTargetBits(data.targetBits);
+        setQuestions(data.questions);
+        
+        // Group questions and initialize answer arrays
+        const alphaQuestions = data.questions.filter((q: Question) => q.bitGroup.toLowerCase() === 'alpha');
+        const betaQuestions = data.questions.filter((q: Question) => q.bitGroup.toLowerCase() === 'beta');
+        const gammaQuestions = data.questions.filter((q: Question) => q.bitGroup.toLowerCase() === 'gamma');
+        
+        setAlphaAnswers(new Array(alphaQuestions.length).fill(-1));
+        setBetaAnswers(new Array(betaQuestions.length).fill(-1));
+        setGammaAnswers(new Array(gammaQuestions.length).fill(-1));
+        
+        // Set completion status based on solved bits
+        if (data.solvedBits) {
+          const solvedBitsArray = data.solvedBits.split('');
+          setAlphaCompleted(solvedBitsArray.slice(0, 3).every((bit: string) => bit !== '_'));
+          setBetaCompleted(solvedBitsArray.slice(3, 6).every((bit: string) => bit !== '_'));
+          setGammaCompleted(solvedBitsArray.slice(6, 8).every((bit: string) => bit !== '_'));
+        }
+        
+        setIsJoined(true);
+      } else {
+        setError('找不到學生資料');
+      }
+    } catch (err) {
+      setError('載入學生資料失敗');
     }
   };
 
@@ -105,6 +159,11 @@ export default function GamePage() {
 
       if (response.ok) {
         const data = await response.json();
+        
+        // Redirect to the same page but with studentId parameter
+        const newUrl = `/game/${roomCode}?studentId=${data.studentId}`;
+        window.history.replaceState({}, '', newUrl);
+        
         setStudentId(data.studentId);
         setAssignedChar(data.assignedChar);
         setCharPosition(data.charPosition);
@@ -297,7 +356,7 @@ export default function GamePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">載入密室逃脱中...</div>
+        <div className="text-white text-xl">載入遊戲中...</div>
       </div>
     );
   }
@@ -325,7 +384,7 @@ export default function GamePage() {
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-                🔬 邏輯閘密室逃脱
+                邏輯閘解碼
               </h1>
               <p className="text-gray-300 mt-2">房間： {gameRoom?.roomCode}</p>
               <p className="text-xs text-gray-500 mt-2">

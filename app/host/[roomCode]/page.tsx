@@ -235,7 +235,7 @@ export default function HostView() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-                🔬 邏輯閘密室逃脱
+                邏輯閘解碼
               </h1>
               <p className="text-gray-300 mt-1">房間： {gameRoom?.roomCode} | 隊伍： {gameRoom?.team}</p>
             </div>
