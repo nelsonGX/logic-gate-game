@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import QRCode from 'qrcode';
 
 export default function Main() {
@@ -10,6 +11,7 @@ export default function Main() {
   const [isLoading, setIsLoading] = useState(false);
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [gameRoom, setGameRoom] = useState<any>(null);
   const router = useRouter();
 
@@ -147,7 +149,7 @@ export default function Main() {
               
               {qrCodeUrl && (
                 <div className="bg-white rounded-lg p-4 inline-block mb-6">
-                  <img src={qrCodeUrl} alt="QR Code" className="w-48 h-48" />
+                  <Image src={qrCodeUrl} alt="QR Code" className="w-48 h-48" width={48} height={48} />
                 </div>
               )}
 
@@ -199,6 +201,7 @@ export default function Main() {
                       <div className="space-y-1 max-h-24 overflow-y-auto">
                         {gameRoom.students
                           .slice(-4) // Show last 4 students
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
                           .map((student: any) => (
                             <div key={student.id} className="flex items-center justify-between bg-gray-600/50 rounded-lg p-2">
                               <div className="flex items-center space-x-2">

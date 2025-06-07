@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-function generateCharacterQuestions(character: string, charPosition: number): any[] {
+function generateCharacterQuestions(character: string): unknown[] {
   // Convert character to 8-bit ASCII
   const ascii = character.charCodeAt(0);
   const binaryString = ascii.toString(2).padStart(8, '0');
@@ -47,7 +47,7 @@ function generateCharacterQuestions(character: string, charPosition: number): an
     return validCombinations[Math.floor(Math.random() * validCombinations.length)];
   }
   
-  function generateSimpleQuestion(bitGroup: string, groupName: string): any[] {
+  function generateSimpleQuestion(bitGroup: string, groupName: string): unknown[] {
     // Generate one question for each bit in the group (3 bits = 3 questions)
     const questions = [];
     
@@ -74,7 +74,7 @@ function generateCharacterQuestions(character: string, charPosition: number): an
     return questions;
   }
   
-  function generateComplexQuestion(bitGroup: string): any[] {
+  function generateComplexQuestion(bitGroup: string): unknown[] {
     // Generate one question for each bit in the 2-bit group using complex circuits
     const questions = [];
     
@@ -164,7 +164,7 @@ export async function POST(
     }
 
     // Find next available character position
-    const assignedPositions = gameRoom.students.map(s => s.charPosition);
+    const assignedPositions = gameRoom.students.map((s: { charPosition: unknown; }) => s.charPosition);
     let nextPosition = 0;
     while (assignedPositions.includes(nextPosition) && nextPosition < gameRoom.answerString.length) {
       nextPosition++;
@@ -183,7 +183,7 @@ export async function POST(
     const targetBits = ascii.toString(2).padStart(8, '0');
     
     // Generate character-based questions
-    const questions = generateCharacterQuestions(assignedChar, nextPosition);
+    const questions = generateCharacterQuestions(assignedChar);
 
     const student = await prisma.student.create({
       data: {
