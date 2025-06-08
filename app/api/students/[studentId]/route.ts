@@ -29,7 +29,7 @@ export async function GET(
       charPosition: student.charPosition,
       targetBits: student.targetBits,
       questions: typeof student.questions === 'string' ? JSON.parse(student.questions) : student.questions,
-      solvedBits: student.solvedBits,
+      // solvedBits: student.solvedBits,
       solvedChar: student.solvedChar,
       completedAt: student.completedAt,
       gameRoom: {
