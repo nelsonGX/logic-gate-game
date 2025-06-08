@@ -486,120 +486,120 @@ export default function GamePage() {
     );
   }
 
-  // Show waiting screen if student has joined but game hasn't started yet
-  if (isJoined && gameRoom?.status === 'waiting') {
+// Show waiting screen if student has joined but game hasn't started yet
+if (isJoined && gameRoom?.status === 'waiting') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl">
-          <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-                🔬 Logic Gate Escape Room
-              </h1>
-              <p className="text-gray-300 mt-2">Room: {gameRoom?.roomCode}</p>
-              <p className="text-xl text-yellow-400 mt-4 font-semibold">Waiting for game to start...</p>
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl">
+                <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+                            邏輯閘解謎
+                        </h1>
+                        <p className="text-gray-300 mt-2">房間: {gameRoom?.roomCode}</p>
+                        <p className="text-xl text-yellow-400 mt-4 font-semibold">等待遊戲開始...</p>
+                    </div>
+
+                    {/* Student Info */}
+                    <div className="bg-gray-700/30 rounded-xl p-6 mb-6">
+                        <h3 className="text-lg font-semibold text-white mb-4 text-center">您的任務</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+                            <div>
+                                <div className="text-2xl font-bold text-indigo-400">{studentName}</div>
+                                <div className="text-sm text-gray-300">您的名稱</div>
+                            </div>
+                            <div>
+                                <div className="text-2xl font-bold text-yellow-400">角色 {charPosition}</div>
+                                <div className="text-sm text-gray-300">您的位置</div>
+                            </div>
+                        </div>
+                        <div className="text-center mt-4">
+                            <p className="text-gray-400 text-sm">
+                                您將解決邏輯閘謎題以解碼您的角色並幫助完成逃脫密碼！
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Team Progress */}
+                    <div className="bg-gray-700/30 rounded-xl p-6 mb-6">
+                        <h3 className="text-lg font-semibold text-white mb-4 text-center">團隊狀態</h3>
+                        
+                        <div className="grid grid-cols-3 gap-4 mb-4">
+                            <div className="text-center">
+                                <div className="text-2xl font-bold text-green-400">
+                                    {gameRoom?.students.length || 0}
+                                </div>
+                                <div className="text-xs text-gray-300">已加入</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-2xl font-bold text-yellow-400">
+                                    {(gameRoom?.studentAmount || 0) - (gameRoom?.students.length || 0)}
+                                </div>
+                                <div className="text-xs text-gray-300">等待中</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-2xl font-bold text-blue-400">
+                                    {gameRoom?.studentAmount || 0}
+                                </div>
+                                <div className="text-xs text-gray-300">總計</div>
+                            </div>
+                        </div>
+
+                        <div className="mb-4">
+                            <div className="flex justify-between text-xs text-gray-400 mb-1">
+                                <span>團隊加入進度</span>
+                                <span>{Math.round(((gameRoom?.students.length || 0) / (gameRoom?.studentAmount || 1)) * 100)}%</span>
+                            </div>
+                            <div className="w-full bg-gray-600 rounded-full h-2">
+                                <div 
+                                    className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+                                    style={{ width: `${((gameRoom?.students.length || 0) / (gameRoom?.studentAmount || 1)) * 100}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        {gameRoom && gameRoom.students.length === gameRoom.studentAmount ? (
+                            <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg text-center">
+                                <div className="text-green-300 font-semibold">所有隊友已加入！</div>
+                                <div className="text-green-400 text-sm">等待主持人開始遊戲...</div>
+                            </div>
+                        ) : (
+                            <div className="p-3 bg-yellow-900/30 border border-yellow-500/50 rounded-lg text-center">
+                                <div className="text-yellow-300 font-semibold">等待更多隊友...</div>
+                                <div className="text-yellow-400 text-sm">
+                                    {(gameRoom?.studentAmount || 0) - (gameRoom?.students.length || 0)} 還需要
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Instructions */}
+                    <div className="bg-gray-700/30 rounded-xl p-6">
+                        <h3 className="text-lg font-semibold text-white mb-3 text-center">操作說明</h3>
+                        <div className="space-y-2 text-sm text-gray-300">
+                            <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+                                <span>每位學生將被分配一個角色位置以進行解碼</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+                                <span>在 Alpha、Beta 和 Gamma 組中解決邏輯閘謎題</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+                                <span>您的答案將揭示形成您角色的位元</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+                                <span>共同努力完成完整的逃脫密碼！</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            {/* Student Info */}
-            <div className="bg-gray-700/30 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-4 text-center">Your Assignment</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-indigo-400">{studentName}</div>
-                  <div className="text-sm text-gray-300">Your Name</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-yellow-400">Character {charPosition}</div>
-                  <div className="text-sm text-gray-300">Your Position</div>
-                </div>
-              </div>
-              <div className="text-center mt-4">
-                <p className="text-gray-400 text-sm">
-                  You will solve logic gate puzzles to decode your assigned character and help complete the escape code!
-                </p>
-              </div>
-            </div>
-
-            {/* Team Progress */}
-            <div className="bg-gray-700/30 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-4 text-center">Team Status</h3>
-              
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-400">
-                    {gameRoom?.students.length || 0}
-                  </div>
-                  <div className="text-xs text-gray-300">Joined</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-400">
-                    {(gameRoom?.studentAmount || 0) - (gameRoom?.students.length || 0)}
-                  </div>
-                  <div className="text-xs text-gray-300">Waiting</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-400">
-                    {gameRoom?.studentAmount || 0}
-                  </div>
-                  <div className="text-xs text-gray-300">Total</div>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <div className="flex justify-between text-xs text-gray-400 mb-1">
-                  <span>Team Join Progress</span>
-                  <span>{Math.round(((gameRoom?.students.length || 0) / (gameRoom?.studentAmount || 1)) * 100)}%</span>
-                </div>
-                <div className="w-full bg-gray-600 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${((gameRoom?.students.length || 0) / (gameRoom?.studentAmount || 1)) * 100}%` }}
-                  />
-                </div>
-              </div>
-
-              {gameRoom && gameRoom.students.length === gameRoom.studentAmount ? (
-                <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg text-center">
-                  <div className="text-green-300 font-semibold">All teammates have joined!</div>
-                  <div className="text-green-400 text-sm">Waiting for host to start the game...</div>
-                </div>
-              ) : (
-                <div className="p-3 bg-yellow-900/30 border border-yellow-500/50 rounded-lg text-center">
-                  <div className="text-yellow-300 font-semibold">Waiting for more teammates...</div>
-                  <div className="text-yellow-400 text-sm">
-                    {(gameRoom?.studentAmount || 0) - (gameRoom?.students.length || 0)} more needed
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Instructions */}
-            <div className="bg-gray-700/30 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-3 text-center">How It Works</h3>
-              <div className="space-y-2 text-sm text-gray-300">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
-                  <span>Each student gets assigned a character position to decode</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
-                  <span>Solve logic gate puzzles in Alpha, Beta, and Gamma groups</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
-                  <span>Your answers will reveal bits that form your character</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
-                  <span>Work together to complete the full escape code!</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
     );
-  }
+}
 
   // Show results screen after group submission
   if (submitResult) {

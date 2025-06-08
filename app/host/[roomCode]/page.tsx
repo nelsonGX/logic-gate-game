@@ -104,16 +104,16 @@ export default function HostView() {
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 mb-6">
             <div className="text-center">
               <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-                🔬 Logic Gate Escape Room
+                邏輯閘解謎
               </h1>
-              <p className="text-gray-300 text-lg">Room: {gameRoom?.roomCode} | Team: {gameRoom?.team}</p>
-              <p className="text-gray-400 text-sm mt-2">Waiting for all students to join before starting the game</p>
+              <p className="text-gray-300 text-lg">房間: {gameRoom?.roomCode} | 小隊: {gameRoom?.team}</p>
+              <p className="text-gray-400 text-sm mt-2">等待全部學生加入遊戲...</p>
             </div>
           </div>
 
           {/* Student Join Status */}
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 mb-6">
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">Student Join Status</h2>
+            <h2 className="text-2xl font-bold text-white mb-6 text-center">學生加入狀態</h2>
             
             {/* Join Progress Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -121,26 +121,26 @@ export default function HostView() {
                 <div className="text-3xl font-bold text-green-400 mb-2">
                   {gameRoom?.students.length || 0}
                 </div>
-                <div className="text-gray-300">Students Joined</div>
+                <div className="text-gray-300">加入的學生數量</div>
               </div>
               <div className="bg-gray-700/50 rounded-lg p-6 text-center">
                 <div className="text-3xl font-bold text-yellow-400 mb-2">
                   {(gameRoom?.studentAmount || 0) - (gameRoom?.students.length || 0)}
                 </div>
-                <div className="text-gray-300">Waiting For</div>
+                <div className="text-gray-300">尚未加入</div>
               </div>
               <div className="bg-gray-700/50 rounded-lg p-6 text-center">
                 <div className="text-3xl font-bold text-blue-400 mb-2">
                   {gameRoom?.studentAmount || 0}
                 </div>
-                <div className="text-gray-300">Total Expected</div>
+                <div className="text-gray-300">學生總數</div>
               </div>
             </div>
 
             {/* Progress Bar */}
             <div className="mb-6">
               <div className="flex justify-between text-sm text-gray-300 mb-2">
-                <span>Join Progress</span>
+                <span>加入狀態</span>
                 <span>{Math.round(((gameRoom?.students.length || 0) / (gameRoom?.studentAmount || 1)) * 100)}%</span>
               </div>
               <div className="w-full bg-gray-700 rounded-full h-4">
@@ -154,7 +154,7 @@ export default function HostView() {
             {/* Student List */}
             {gameRoom && gameRoom.students.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Joined Students</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">已加入的學生數量</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {gameRoom.students.map((student) => (
                     <div key={student.id} className="bg-gray-700/30 rounded-lg p-3 flex items-center justify-between">
@@ -163,7 +163,7 @@ export default function HostView() {
                         <span className="text-gray-300 font-medium">{student.displayName}</span>
                       </div>
                       <div className="text-xs text-gray-400 bg-gray-600 px-2 py-1 rounded">
-                        Char {student.charPosition}
+                        字元 {student.charPosition}
                       </div>
                     </div>
                   ))}
@@ -178,9 +178,9 @@ export default function HostView() {
                   <div className="p-4 bg-green-900/30 border border-green-500/50 rounded-lg">
                     <div className="flex items-center justify-center space-x-2 mb-2">
                       <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                      <span className="text-green-300 font-semibold text-lg">All students have joined!</span>
+                      <span className="text-green-300 font-semibold text-lg">全部學生已加入！</span>
                     </div>
-                    <p className="text-green-400">Ready to start the logic gate escape room.</p>
+                    <p className="text-green-400">可以準備開始了</p>
                   </div>
                   <button
                     onClick={startGame}
@@ -193,10 +193,10 @@ export default function HostView() {
                 <div className="p-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg">
                   <div className="flex items-center justify-center space-x-2 mb-2">
                     <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-                    <span className="text-yellow-300 font-semibold">Waiting for more students...</span>
+                    <span className="text-yellow-300 font-semibold">等待更多學生...</span>
                   </div>
                   <p className="text-yellow-400">
-                    {(gameRoom?.studentAmount || 0) - (gameRoom?.students.length || 0)} more student(s) needed to start
+                    還有 {(gameRoom?.studentAmount || 0) - (gameRoom?.students.length || 0)} 個學生沒加入！
                   </p>
                 </div>
               )}
@@ -205,7 +205,7 @@ export default function HostView() {
 
           {/* Game URL for sharing */}
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Share with Students</h2>
+            <h2 className="text-xl font-bold text-white mb-4">分享</h2>
             <div className="flex items-center space-x-4">
               <div className="flex-1 bg-gray-700 rounded-lg p-3 font-mono text-sm text-gray-300">
                 {typeof window !== 'undefined' ? `${window.location.origin}/game/${roomCode}` : ''}
@@ -218,7 +218,7 @@ export default function HostView() {
                 }}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
               >
-                Copy Link
+                複製連結
               </button>
             </div>
           </div>

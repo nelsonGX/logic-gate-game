@@ -265,11 +265,6 @@ export default function SelectQuestion({
         }`}>
           {question.text}
         </h3>
-        {question.isFinal && (
-          <div className="text-xs md:text-sm text-yellow-400 bg-yellow-900/30 px-3 py-1 rounded-lg inline-block">
-            🔑 這決定了您的位元貢獻
-          </div>
-        )}
       </div>
 
       {/* Circuit Visualization */}
