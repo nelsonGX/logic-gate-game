@@ -161,19 +161,19 @@ export default function SelectQuestion({
     const gate2 = circuit.gate2;
 
     return (
-      <div className="flex items-center justify-center my-4 md:my-6 p-4 md:p-8 bg-gray-900/50 rounded-xl border border-gray-600 overflow-x-auto">
-        <div className="flex items-center space-x-4 md:space-x-8 min-w-fit scale-75 md:scale-100">
+      <div className="flex items-center justify-start my-4 md:my-6 p-2 md:p-8 bg-gray-900/50 rounded-xl border border-gray-600 overflow-x-auto">
+        <div className="relative flex items-center min-w-fit scale-[0.65] sm:scale-75 md:scale-90 lg:scale-100">
           {/* Gate 1 Section */}
           <div className="flex items-center">
             {/* Gate 1 Inputs */}
-            <div className="flex flex-col items-end space-y-2 md:space-y-3 mr-3 md:mr-4">
+            <div className="flex flex-col items-end space-y-1 sm:space-y-2 md:space-y-3 mr-2 sm:mr-3 md:mr-6">
               {gate1.inputs.map((input: boolean, index: number) => (
-                <div key={index} className="flex items-center space-x-2 md:space-x-3">
-                  <span className="text-gray-300 text-xs md:text-sm font-medium min-w-[12px]">
+                <div key={index} className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
+                  <span className="text-gray-300 text-xs font-medium min-w-[8px] sm:min-w-[12px]">
                     {index === 0 ? 'A' : 'B'}
                   </span>
                   <div
-                    className={`w-5 h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
+                    className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
                       input 
                         ? 'bg-green-400 border-green-300 text-green-900' 
                         : 'bg-red-400 border-red-300 text-red-900'
@@ -182,44 +182,53 @@ export default function SelectQuestion({
                   >
                     {input ? '1' : '0'}
                   </div>
-                  <div className="w-4 md:w-6 h-0.5 bg-gray-400" />
+                  <div className="w-3 sm:w-4 md:w-8 h-0.5 bg-gray-400" />
                 </div>
               ))}
             </div>
 
             {/* Gate 1 Body */}
-            <div className={`${getGateColor(gate1.type)} border-2 rounded-lg px-3 md:px-4 py-2 md:py-3 text-white shadow-lg min-w-[50px] md:min-w-[70px]`}>
+            <div
+              className={`${getGateColor(gate1.type)} border-2 rounded-lg px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-white shadow-lg min-w-[40px] sm:min-w-[60px] md:min-w-[80px]`}
+            >
               <div className="text-center">
-                <div className="text-lg md:text-xl font-bold mb-1">{getGateSymbol(gate1.type)}</div>
+                <div className="text-lg sm:text-xl md:text-2xl font-bold mb-1">{getGateSymbol(gate1.type)}</div>
                 <div className="text-xs font-semibold">{gate1.type}</div>
               </div>
             </div>
 
-            {/* Gate 1 Output Connection */}
-            <div className="ml-2 md:ml-4">
-              <div className="w-4 md:w-6 h-0.5 bg-gray-400" />
+            {/* Gate 1 Output */}
+            <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3 ml-2 sm:ml-3 md:ml-6">
+              <div className="w-3 sm:w-4 md:w-8 h-0.5 bg-yellow-400" />
+              <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border-2 bg-yellow-400 border-yellow-300 flex items-center justify-center text-xs font-bold text-yellow-900">
+                G1
+              </div>
+              <span className="text-yellow-300 text-xs font-medium hidden sm:inline">Gate1輸出</span>
             </div>
           </div>
 
           {/* Connection Wire */}
-          <div className="w-4 md:w-8 h-0.5 bg-gray-400" />
+          <div className="w-3 sm:w-4 md:w-8 h-0.5 bg-yellow-400 mx-2 sm:mx-4 md:mx-8" />
 
           {/* Gate 2 Section */}
           <div className="flex items-center">
             {/* Gate 2 Inputs */}
-            <div className="flex flex-col items-end space-y-2 md:space-y-3 mr-3 md:mr-4">
+            <div className="flex flex-col items-end space-y-1 sm:space-y-2 md:space-y-3 mr-2 sm:mr-3 md:mr-6">
               {/* Input from Gate 1 */}
-              <div className="flex items-center space-x-2 md:space-x-3">
-                <div className="w-4 md:w-6 h-0.5 bg-gray-400" />
-                <div className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 bg-yellow-400 border-yellow-300 flex items-center justify-center text-xs font-bold text-yellow-900" title="閩 1 輸出">
+              <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
+                <span className="text-yellow-300 text-xs font-medium min-w-[8px] sm:min-w-[12px]">
+                  G1→
+                </span>
+                <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border-2 bg-yellow-400 border-yellow-300 flex items-center justify-center text-xs font-bold text-yellow-900" title="Gate 1 輸出">
                   G1
                 </div>
+                <div className="w-3 sm:w-4 md:w-8 h-0.5 bg-yellow-400" />
               </div>
               {/* Second input */}
-              <div className="flex items-center space-x-2 md:space-x-3">
-                <span className="text-gray-300 text-xs md:text-sm font-medium min-w-[12px]">C</span>
+              <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
+                <span className="text-gray-300 text-xs font-medium min-w-[8px] sm:min-w-[12px]">C</span>
                 <div
-                  className={`w-5 h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
                     gate2.inputs[1] 
                       ? 'bg-green-400 border-green-300 text-green-900' 
                       : 'bg-red-400 border-red-300 text-red-900'
@@ -228,25 +237,27 @@ export default function SelectQuestion({
                 >
                   {gate2.inputs[1] ? '1' : '0'}
                 </div>
-                <div className="w-4 md:w-6 h-0.5 bg-gray-400" />
+                <div className="w-3 sm:w-4 md:w-8 h-0.5 bg-gray-400" />
               </div>
             </div>
 
             {/* Gate 2 Body */}
-            <div className={`${getGateColor(gate2.type)} border-2 rounded-lg px-3 md:px-4 py-2 md:py-3 text-white shadow-lg min-w-[50px] md:min-w-[70px]`}>
+            <div
+              className={`${getGateColor(gate2.type)} border-2 rounded-lg px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-white shadow-lg min-w-[40px] sm:min-w-[60px] md:min-w-[80px]`}
+            >
               <div className="text-center">
-                <div className="text-lg md:text-xl font-bold mb-1">{getGateSymbol(gate2.type)}</div>
+                <div className="text-lg sm:text-xl md:text-2xl font-bold mb-1">{getGateSymbol(gate2.type)}</div>
                 <div className="text-xs font-semibold">{gate2.type}</div>
               </div>
             </div>
 
             {/* Gate 2 Output */}
-            <div className="flex items-center space-x-2 md:space-x-3 ml-2 md:ml-4">
-              <div className="w-4 md:w-6 h-0.5 bg-gray-400" />
-              <div className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 bg-gray-400 border-gray-300 flex items-center justify-center text-xs font-bold text-gray-700">
+            <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3 ml-2 sm:ml-3 md:ml-6">
+              <div className="w-3 sm:w-4 md:w-8 h-0.5 bg-gray-400" />
+              <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border-2 bg-gray-400 border-gray-300 flex items-center justify-center text-xs font-bold text-gray-700">
                 ?
               </div>
-              <span className="text-gray-300 text-xs md:text-sm font-medium">輸出</span>
+              <span className="text-gray-300 text-xs font-medium hidden sm:inline">輸出</span>
             </div>
           </div>
         </div>

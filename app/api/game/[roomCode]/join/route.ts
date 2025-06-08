@@ -59,7 +59,7 @@ function generateCharacterQuestions(character: string): unknown[] {
       questions.push({
         id: `${groupName.toLowerCase()}_bit_${i}`,
         type: 'simple_logic_gate',
-        text: `${groupName} Circuit - Bit ${i + 1}: What is the output of this ${gateType} gate?`,
+        text: `${groupName} 字元 ${i + 1}：這個 ${gateType} 閘的輸出是什麼？`,
         gateType,
         inputs,
         options: ['0 (False)', '1 (True)'],
@@ -97,7 +97,7 @@ function generateCharacterQuestions(character: string): unknown[] {
       questions.push({
         id: `gamma_bit_${i}`,
         type: 'complex_logic_gate',
-        text: `Gamma Complex Circuit - Bit ${i + 1}: Calculate the final output`,
+        text: `Gamma 字元 ${i + 1}：計算複合電路的最終輸出`,
         circuit: {
           gate1: { type: gate1Type, inputs: gate1Inputs },
           gate2: { type: gate2Type, inputs: [null, finalGate2Input] } // null will be filled with gate1 output

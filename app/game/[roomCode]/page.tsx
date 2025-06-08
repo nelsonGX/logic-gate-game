@@ -609,7 +609,7 @@ if (isJoined && gameRoom?.status === 'waiting') {
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-white mb-4">
-                {submitResult.correct ? '🎉 組別完成！' : '❌ 再試一次'}
+                {submitResult.correct ? '🎉 組別完成！請前往下一關' : '❌ 有一個以上的題目答錯了！再試一次'}
               </h1>
               <div className="text-lg text-indigo-400 mb-4">
                 {submitResult.group.toUpperCase()} 電路： 
@@ -705,19 +705,13 @@ if (isJoined && gameRoom?.status === 'waiting') {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6 md:mb-8 text-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">🔬 字元解碼挑戰</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">邏輯閘解碼挑戰</h1>
           <div className="text-sm md:text-base text-gray-300 space-y-1 md:space-y-0">
             <div className="md:inline">
               學生： <span className="text-indigo-400 font-semibold">{studentName}</span>
             </div>
             <div className="md:inline md:ml-2">
-              | 目標： <span className="text-yellow-400 font-mono text-lg md:text-xl">???</span>
-            </div>
-            <div className="md:inline md:ml-2">
-              | 位置： {charPosition}
-            </div>
-            <div className="md:inline md:ml-2">
-              | 房間： {gameRoom?.roomCode}
+              房間： {gameRoom?.roomCode}
             </div>
           </div>
           <div className="text-xs md:text-sm text-gray-400 mt-2">
