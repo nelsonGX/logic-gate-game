@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 
 interface Student {
   id: string;
@@ -245,6 +246,9 @@ export default function HostView() {
               </div>
               <div className="text-sm text-gray-300">學生完成數</div>
             </div>
+            <Link href="/" className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+            🏠 返回主頁
+            </Link>
           </div>
           
           {/* Progress Bar */}
