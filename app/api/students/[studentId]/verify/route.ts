@@ -25,11 +25,11 @@ export async function POST(
     }
 
     console.log('======VERIFY======')
-    console.log("Student Assigned Char: ", student.assignedChar);
+    console.log("Student Assigned Char: ", String.fromCharCode(parseInt(student.currentBits, 2)));
     console.log("Student Answer: ", answer);
     console.log('======VERIFY======')
 
-    if (student.assignedChar.toLowerCase() !== answer.toLowerCase()) {
+    if (String.fromCharCode(parseInt(student.currentBits, 2)).toLowerCase() !== answer.toLowerCase()) {
       return NextResponse.json({ error: 'Wrong answer' }, { status: 400 });
     }
 
