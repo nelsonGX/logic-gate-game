@@ -106,11 +106,20 @@ export default function HostView() {
     }
   };
 
-  const verifyCharacter = (index: number, inputChar: string) => {
+  const verifyCharacter = async (index: number, inputChar: string) => {
     if (!gameRoom || !gameRoom.answerString) return;
     
-    const correctChar = gameRoom.answerString[index];
-    const isCorrect = inputChar === correctChar;
+    const response = await fetch(`/api/students/${gameRoom.students[index].id}/verify`, {
+      method: 'POST',
+      body: JSON.stringify({ answer: inputChar })
+    });
+
+    let isCorrect = false;
+    if (response.ok) {
+      isCorrect = true;
+    } else {
+      isCorrect = false;
+    }
     
     const newStatus = [...verificationStatus];
     newStatus[index] = isCorrect;
@@ -121,15 +130,12 @@ export default function HostView() {
 
   const verifyAllCharacters = () => {
     if (!gameRoom || !gameRoom.answerString) return;
-    
-    const newStatus = characterInputs.map((input, index) => 
-      input === gameRoom.answerString[index]
-    );
-    setVerificationStatus(newStatus);
-    
-    const allCorrect = newStatus.every(status => status);
+
+    const allCorrect = verificationStatus.every(status => status);
     if (allCorrect) {
-      alert('🎉 所有字元驗證正確！');
+      return true;
+    } else {
+      return false;
     }
   };
 
@@ -487,6 +493,11 @@ export default function HostView() {
                         
             {/* Verification Status Summary */}
             <div className="bg-gray-700/30 rounded-lg p-3">
+            {verifyAllCharacters() ? 
+                <div className="text-green-400">
+                  ✓ 所有字元驗證正確！
+                </div> : (
+                  <>
               <div className="text-sm text-gray-300 mb-2">驗證狀態：</div>
               <div className="flex justify-center space-x-4 text-sm">
                 <span className="text-green-400">
@@ -503,6 +514,9 @@ export default function HostView() {
                   ).length}
                 </span>
               </div>
+              </>
+                )
+              }
             </div>
           </div>
         </div>
@@ -559,12 +573,7 @@ export default function HostView() {
                           >
                             {student.alphaCompleted && student.alphaAnswers ? 
                               (() => {
-                                try {
-                                  const answers = JSON.parse(student.alphaAnswers);
-                                  return answers[bitIndex] || '_';
-                                } catch {
-                                  return '_';
-                                }
+                                return student.alphaAnswers[bitIndex] || '_';
                               })() : '_'}
                           </div>
                         ))}
@@ -582,12 +591,7 @@ export default function HostView() {
                           >
                             {student.betaCompleted && student.betaAnswers ? 
                               (() => {
-                                try {
-                                  const answers = JSON.parse(student.betaAnswers);
-                                  return answers[bitIndex] || '_';
-                                } catch {
-                                  return '_';
-                                }
+                                return student.betaAnswers[bitIndex] || '_';
                               })() : '_'}
                           </div>
                         ))}
@@ -605,12 +609,7 @@ export default function HostView() {
                           >
                             {student.gammaCompleted && student.gammaAnswers ? 
                               (() => {
-                                try {
-                                  const answers = JSON.parse(student.gammaAnswers);
-                                  return answers[bitIndex] || '_';
-                                } catch {
-                                  return '_';
-                                }
+                                return student.gammaAnswers[bitIndex] || '_';
                               })() : '_'}
                           </div>
                         ))}

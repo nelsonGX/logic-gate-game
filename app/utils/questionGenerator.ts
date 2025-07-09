@@ -170,7 +170,7 @@ export function regenerateQuestionsForGroup(
   newBits: string
 ): unknown[] {
   const gateTypes = ['AND', 'OR', 'NOT', 'XOR'];
-  const complexGateTypes = ['NAND', 'NOR', 'XOR'];
+  const complexGateTypes = ['NAND', 'NOR', 'XOR', 'AND', 'OR'];
   
   function calculateGateOutput(gateType: string, inputs: boolean[]): boolean {
     switch (gateType) {
@@ -234,9 +234,14 @@ export function regenerateQuestionsForGroup(
     
     for (let i = 0; i < bitGroup.length; i++) {
       const bit = bitGroup[i] === '1';
+
+      let gate1Type = null;
+
+      do {
+        gate1Type = complexGateTypes[Math.floor(Math.random() * complexGateTypes.length)];
+      } while (gate1Type === 'NOT');
       
-      const gate1Type = complexGateTypes[Math.floor(Math.random() * complexGateTypes.length)];
-      const gate2Type = gateTypes[Math.floor(Math.random() * gateTypes.length)];
+      let gate2Type = gateTypes[Math.floor(Math.random() * gateTypes.length)];
       
       const gate1Inputs = [Math.random() < 0.5, Math.random() < 0.5];
       const gate1Output = calculateGateOutput(gate1Type, gate1Inputs);
@@ -244,11 +249,20 @@ export function regenerateQuestionsForGroup(
       let gate2SecondInput = null;
 
       if (gate2Type === 'NOT') {
-         gate2SecondInput = null;
+        gate2SecondInput = null;
       } else {
-        gate2SecondInput = Math.random() < 0.5;
-        const testOutput = calculateGateOutput(gate2Type, [gate1Output, gate2SecondInput]);
-        gate2SecondInput = testOutput === bit ? gate2SecondInput : !gate2SecondInput;
+        const validSecondInput = findValidSecondInput(gate2Type, gate1Output, bit);
+        if (validSecondInput !== null) {
+          gate2SecondInput = validSecondInput;
+        } else {
+          // Fallback: try random inputs until we find one that works
+          do {
+            gate2Type = gateTypes[Math.floor(Math.random() * gateTypes.length)];
+            gate2SecondInput = Math.random() < 0.5;
+            const testOutput = calculateGateOutput(gate2Type, [gate1Output, gate2SecondInput]);
+            gate2SecondInput = testOutput === bit ? gate2SecondInput : !gate2SecondInput;
+          } while (!canGateProduceOutput(gate2Type, gate1Output, gate2SecondInput, bit));
+        }
       }
 
       
@@ -303,4 +317,56 @@ export function regenerateQuestionsForGroup(
   });
   
   return updatedQuestions;
+} 
+
+// Function to check if gate2Type can produce the desired output with given inputs
+export function canGateProduceOutput(
+  gateType: string, 
+  firstInput: boolean, 
+  secondInput: boolean, 
+  desiredOutput: boolean
+): boolean {
+  function calculateGateOutput(gateType: string, inputs: boolean[]): boolean {
+    switch (gateType) {
+      case 'AND': return inputs[0] && inputs[1];
+      case 'OR': return inputs[0] || inputs[1];
+      case 'NOT': return !inputs[0];
+      case 'XOR': return inputs[0] !== inputs[1];
+      case 'NAND': return !(inputs[0] && inputs[1]);
+      case 'NOR': return !(inputs[0] || inputs[1]);
+      default: return false;
+    }
+  }
+
+  // Handle NOT gate specially since it only takes one input
+  if (gateType === 'NOT') {
+    return calculateGateOutput(gateType, [firstInput]) === desiredOutput;
+  }
+
+  // For all other gates, use both inputs
+  return calculateGateOutput(gateType, [firstInput, secondInput]) === desiredOutput;
+}
+
+// Function to find valid second input for gate2 to produce desired output
+export function findValidSecondInput(
+  gateType: string, 
+  firstInput: boolean, 
+  desiredOutput: boolean
+): boolean | null {
+  // For NOT gate, second input is not used
+  if (gateType === 'NOT') {
+    return null;
+  }
+
+  // Try both true and false for second input
+  if (canGateProduceOutput(gateType, firstInput, true, desiredOutput)) {
+    return true;
+  }
+  
+  if (canGateProduceOutput(gateType, firstInput, false, desiredOutput)) {
+    return false;
+  }
+
+  // If neither works, return null
+  return null;
 } 
