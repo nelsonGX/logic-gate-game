@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { rollNewBitsForGroup, generateCharacterQuestions } from '../../../../utils/questionGenerator';
 
 const prisma = new PrismaClient();
 
@@ -74,34 +75,113 @@ export async function POST(
       }
     }
 
+    // Get current retry counts and completion status
+    const currentStudent = await prisma.student.findUnique({
+      where: { id: studentId }
+    });
+
+    if (!currentStudent) {
+      return NextResponse.json(
+        { error: 'Student not found' },
+        { status: 404 }
+      );
+    }
+
     // Prepare update data for the specific group
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
     
-    if (groupName === 'alpha') {
-      updateData.alphaAnswers = JSON.stringify(answers);
-      updateData.alphaCompleted = allCorrect;
-    } else if (groupName === 'beta') {
-      updateData.betaAnswers = JSON.stringify(answers);
-      updateData.betaCompleted = allCorrect;
-    } else if (groupName === 'gamma') {
-      updateData.gammaAnswers = JSON.stringify(answers);
-      updateData.gammaCompleted = allCorrect;
+    // Check if this is the second wrong attempt for this group
+    const currentRetries = groupName === 'alpha' ? currentStudent.alphaRetries : 
+                          groupName === 'beta' ? currentStudent.betaRetries : 
+                          currentStudent.gammaRetries;
+    
+    const shouldRollBits = !allCorrect && currentRetries >= 1;
+    
+          if (groupName === 'alpha') {
+        updateData.alphaAnswers = JSON.stringify(answers);
+        updateData.alphaCompleted = allCorrect;
+        if (!allCorrect && currentRetries < 1) {
+          updateData.alphaRetries = currentRetries + 1;
+        } else {
+          updateData.alphaRetries = 0;
+        }
+      } else if (groupName === 'beta') {
+        updateData.betaAnswers = JSON.stringify(answers);
+        updateData.betaCompleted = allCorrect;
+        if (!allCorrect && currentRetries < 1) {
+          updateData.betaRetries = currentRetries + 1;
+        } else {
+          updateData.betaRetries = 0;
+        }
+      } else if (groupName === 'gamma') {
+        updateData.gammaAnswers = JSON.stringify(answers);
+        updateData.gammaCompleted = allCorrect;
+        if (!allCorrect && currentRetries < 1) {
+          updateData.gammaRetries = currentRetries + 1;
+        } else {
+          updateData.gammaRetries = 0;
+        }
+      }
+
+    // Handle bit rolling for incorrect groups after second attempt
+    if (shouldRollBits) {
+      console.log('=== BIT ROLLING DEBUG ===');
+      console.log('Group:', groupName);
+      console.log('Current retries:', currentRetries);
+      console.log('Should roll bits:', shouldRollBits);
+      console.log('Current bits before rolling:', currentStudent.currentBits);
+      
+      const correctGroups = {
+        alpha: currentStudent.alphaCompleted,
+        beta: currentStudent.betaCompleted,
+        gamma: currentStudent.gammaCompleted
+      };
+
+      console.log('Correct groups:', correctGroups);
+
+      // Roll new bits for the incorrect group
+      const { newBits, newChar } = rollNewBitsForGroup(
+        currentStudent.currentBits,
+        groupName as 'alpha' | 'beta' | 'gamma',
+        correctGroups
+      );
+
+      console.log('New bits after rolling:', newBits);
+      console.log('New character:', newChar);
+      console.log('Bits changed:', currentStudent.currentBits !== newBits);
+      console.log('=== END DEBUG ===');
+
+      // Regenerate questions for the group
+      const updatedQuestions = generateCharacterQuestions(newChar);
+
+      // Update the student with new bits and questions
+      updateData.assignedChar = newChar;
+      updateData.currentBits = updateData.targetBits = newBits;
+      updateData.questions = JSON.stringify(updatedQuestions);
+      
+      // Reset answers for the rolled group
+      if (groupName === 'alpha') {
+        updateData.alphaAnswers = null;
+      } else if (groupName === 'beta') {
+        updateData.betaAnswers = null;
+      } else if (groupName === 'gamma') {
+        updateData.gammaAnswers = null;
+      }
     }
     
     // Check if all groups will be completed after this submission
-    const currentStudent = await prisma.student.findUnique({
-      where: { id: studentId }
-    });
-    
-    const alphaWillBeComplete = groupName === 'alpha' ? allCorrect : currentStudent?.alphaCompleted;
-    const betaWillBeComplete = groupName === 'beta' ? allCorrect : currentStudent?.betaCompleted;
-    const gammaWillBeComplete = groupName === 'gamma' ? allCorrect : currentStudent?.gammaCompleted;
+    const alphaWillBeComplete = groupName === 'alpha' ? allCorrect : currentStudent.alphaCompleted;
+    const betaWillBeComplete = groupName === 'beta' ? allCorrect : currentStudent.betaCompleted;
+    const gammaWillBeComplete = groupName === 'gamma' ? allCorrect : currentStudent.gammaCompleted;
     
     const allGroupsComplete = alphaWillBeComplete && betaWillBeComplete && gammaWillBeComplete;
     
     if (allGroupsComplete) {
-      updateData.solvedChar = student.assignedChar;
+      // Use the current bits to determine the solved character
+      const solvedCharCode = parseInt(currentStudent.currentBits, 2);
+      const solvedChar = String.fromCharCode(solvedCharCode);
+      updateData.solvedChar = solvedChar;
       updateData.isCompleted = true;
       updateData.completedAt = new Date();
     }
@@ -113,6 +193,19 @@ export async function POST(
       data: updateData,
     });
 
+    console.log('Data:', {
+      success: true,
+      group: group,
+      correct: allCorrect,
+      groupCompleted: allCorrect,
+      allGroupsCompleted: allGroupsComplete,
+      characterUnlocked: allGroupsComplete,
+      bitsRolled: shouldRollBits,
+      message: allCorrect ? `${group} group completed!` : 
+               shouldRollBits ? `${group} group incorrect. New bits have been rolled for this group.` :
+               `${group} group incorrect. Try again.`,
+    });
+
     return NextResponse.json({
       success: true,
       group: group,
@@ -120,7 +213,10 @@ export async function POST(
       groupCompleted: allCorrect,
       allGroupsCompleted: allGroupsComplete,
       characterUnlocked: allGroupsComplete,
-      message: allCorrect ? `${group} group completed!` : `${group} group incorrect. Try again.`,
+      bitsRolled: shouldRollBits,
+      message: allCorrect ? `${group} group completed!` : 
+               shouldRollBits ? `${group} group incorrect. New bits have been rolled for this group.` :
+               `${group} group incorrect. Try again.`,
     });
 
   } catch (error) {

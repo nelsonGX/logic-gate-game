@@ -377,10 +377,6 @@ export default function HostView() {
                 <div className="text-green-300 font-bold text-lg mb-2">🎉 逃脫密碼完成！</div>
                 <div className="text-green-400">所有學生已成功解碼他們的字元！</div>
                 <div className="font-mono text-2xl text-green-300 mt-2 tracking-wider">
-                  {gameRoom.students
-                    .sort((a, b) => a.charPosition - b.charPosition)
-                    .map(s => s.solvedChar || '?')
-                    .join('')}
                 </div>
               </div>
             )}
@@ -473,17 +469,13 @@ export default function HostView() {
                     <div className="text-sm text-gray-300">
                       <strong>學生：</strong> {student.displayName}
                     </div>
-                    <div className="text-sm text-gray-300">
-                      <strong>目標：</strong> 
-                      <span className="font-mono ml-1">???</span>
-                    </div>
                     
                     {/* Bit Progress Display */}
                     <div className="bg-gray-700/30 rounded-lg p-2">
                       <div className="text-xs text-gray-400 mb-1">位元進度：</div>
                       <div className="flex justify-center items-center space-x-0.5">
                         {/* Alpha bits (0-2) */}
-                        {[0, 1, 2].map((bitIndex) => (
+                        {[1, 3, 5].map((bitIndex) => (
                           <div
                             key={`alpha-${bitIndex}`}
                             className={`w-6 h-6 rounded border flex items-center justify-center font-mono text-xs font-bold ${
@@ -493,12 +485,12 @@ export default function HostView() {
                             }`}
                             title={`Alpha bit ${bitIndex + 1}`}
                           >
-                            {student.alphaCompleted ? student.targetBits[bitIndex] : '_'}
+                            {student.alphaCompleted ? student.alphaAnswers[bitIndex] : '_'}
                           </div>
                         ))}
                         <div className="text-gray-500 mx-1 text-xs">|</div>
                         {/* Beta bits (3-5) */}
-                        {[3, 4, 5].map((bitIndex) => (
+                        {[1, 3, 5].map((bitIndex) => (
                           <div
                             key={`beta-${bitIndex}`}
                             className={`w-6 h-6 rounded border flex items-center justify-center font-mono text-xs font-bold ${
@@ -508,12 +500,12 @@ export default function HostView() {
                             }`}
                             title={`Beta bit ${bitIndex - 2}`}
                           >
-                            {student.betaCompleted ? student.targetBits[bitIndex] : '_'}
+                            {student.betaCompleted ? student.betaAnswers[bitIndex] : '_'}
                           </div>
                         ))}
                         <div className="text-gray-500 mx-1 text-xs">|</div>
                         {/* Gamma bits (6-7) */}
-                        {[6, 7].map((bitIndex) => (
+                        {[1, 3].map((bitIndex) => (
                           <div
                             key={`gamma-${bitIndex}`}
                             className={`w-6 h-6 rounded border flex items-center justify-center font-mono text-xs font-bold ${
@@ -523,7 +515,7 @@ export default function HostView() {
                             }`}
                             title={`Gamma bit ${bitIndex - 5}`}
                           >
-                            {student.gammaCompleted ? student.targetBits[bitIndex] : '_'}
+                            {student.gammaCompleted ? student.gammaAnswers[bitIndex] : '_'}
                           </div>
                         ))}
                       </div>

@@ -56,6 +56,7 @@ export default function GamePage() {
   const [assignedChar, setAssignedChar] = useState<string | null>(null);
   const [charPosition, setCharPosition] = useState<number | null>(null);
   const [targetBits, setTargetBits] = useState<string>('00000000');
+  const [currentBits, setCurrentBits] = useState<string>('00000000');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [alphaAnswers, setAlphaAnswers] = useState<number[]>([]);
   const [betaAnswers, setBetaAnswers] = useState<number[]>([]);
@@ -63,9 +64,11 @@ export default function GamePage() {
   const [alphaCompleted, setAlphaCompleted] = useState(false);
   const [betaCompleted, setBetaCompleted] = useState(false);
   const [gammaCompleted, setGammaCompleted] = useState(false);
+  const [allGroupsCompleted, setAllGroupsCompleted] = useState(false);
   const [currentGroup, setCurrentGroup] = useState<'alpha' | 'beta' | 'gamma'>('alpha');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [submitResult, setSubmitResult] = useState<any>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     fetchGameRoom();
@@ -80,6 +83,40 @@ export default function GamePage() {
       return () => clearInterval(interval);
     }
   }, [roomCode, studentIdFromUrl, isJoined]);
+
+  // // Additional effect to refresh student data periodically when game is active
+  // useEffect(() => {
+  //   if (isJoined && studentId && gameRoom?.status === 'active') {
+  //     const interval = setInterval(refreshStudentData, 5000); // Refresh every 5 seconds
+  //     return () => clearInterval(interval);
+  //   }
+  // }, [isJoined, studentId, gameRoom?.status]);
+
+  // // Handle page refresh and beforeunload events
+  // useEffect(() => {
+  //   const handleBeforeUnload = () => {
+  //     // Save current state to sessionStorage if needed
+  //     if (studentId) {
+  //       sessionStorage.setItem('lastStudentId', studentId);
+  //       sessionStorage.setItem('lastRoomCode', roomCode);
+  //     }
+  //   };
+
+  //   const handlePageShow = (event: PageTransitionEvent) => {
+  //     // If page is being restored from cache, refresh data
+  //     if (event.persisted) {
+  //       handlePageRefresh();
+  //     }
+  //   };
+
+  //   window.addEventListener('beforeunload', handleBeforeUnload);
+  //   window.addEventListener('pageshow', handlePageShow);
+
+  //   return () => {
+  //     window.removeEventListener('beforeunload', handleBeforeUnload);
+  //     window.removeEventListener('pageshow', handlePageShow);
+  //   };
+  // }, [studentId, roomCode]);
 
   const fetchGameRoom = async () => {
     try {
@@ -115,31 +152,96 @@ export default function GamePage() {
         setAssignedChar(data.assignedChar);
         setCharPosition(data.charPosition);
         setTargetBits(data.targetBits);
+        setCurrentBits(data.currentBits);
         setQuestions(data.questions);
+        setAllGroupsCompleted(data.allGroupsCompleted);
         
         // Group questions and initialize answer arrays
         const alphaQuestions = data.questions.filter((q: Question) => q.bitGroup.toLowerCase() === 'alpha');
         const betaQuestions = data.questions.filter((q: Question) => q.bitGroup.toLowerCase() === 'beta');
         const gammaQuestions = data.questions.filter((q: Question) => q.bitGroup.toLowerCase() === 'gamma');
         
-        setAlphaAnswers(new Array(alphaQuestions.length).fill(-1));
-        setBetaAnswers(new Array(betaQuestions.length).fill(-1));
-        setGammaAnswers(new Array(gammaQuestions.length).fill(-1));
+        // Restore saved answers if they exist
+        const alphaSavedAnswers = data.alphaAnswers ? JSON.parse(data.alphaAnswers) : [];
+        const betaSavedAnswers = data.betaAnswers ? JSON.parse(data.betaAnswers) : [];
+        const gammaSavedAnswers = data.gammaAnswers ? JSON.parse(data.gammaAnswers) : [];
         
-        // Set completion status based on solved bits
-        if (data.solvedBits) {
-          const solvedBitsArray = data.solvedBits.split('');
-          setAlphaCompleted(solvedBitsArray.slice(0, 3).every((bit: string) => bit !== '_'));
-          setBetaCompleted(solvedBitsArray.slice(3, 6).every((bit: string) => bit !== '_'));
-          setGammaCompleted(solvedBitsArray.slice(6, 8).every((bit: string) => bit !== '_'));
+        setAlphaAnswers(alphaSavedAnswers.length > 0 ? alphaSavedAnswers : new Array(alphaQuestions.length).fill(-1));
+        setBetaAnswers(betaSavedAnswers.length > 0 ? betaSavedAnswers : new Array(betaQuestions.length).fill(-1));
+        setGammaAnswers(gammaSavedAnswers.length > 0 ? gammaSavedAnswers : new Array(gammaQuestions.length).fill(-1));
+        
+        setAlphaCompleted(data.alphaCompleted);
+        setBetaCompleted(data.betaCompleted);
+        setGammaCompleted(data.gammaCompleted);
+        
+        // Auto-switch to next incomplete group
+        if (!data.alphaCompleted) {
+          setCurrentGroup('alpha');
+        } else if (!data.betaCompleted) {
+          setCurrentGroup('beta');
+        } else if (!data.gammaCompleted) {
+          setCurrentGroup('gamma');
+        } else {
+          // All groups completed
+          setCurrentGroup('gamma');
         }
-        
+
         setIsJoined(true);
       } else {
         setError('找不到學生資料');
       }
     } catch (err) {
       setError('載入學生資料失敗');
+    }
+  };
+
+  // Function to refresh student data from API
+  const refreshStudentData = async () => {
+    if (!studentId) return;
+    
+    setIsRefreshing(true);
+    try {
+      const response = await fetch(`/api/students/${studentId}`);
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Update all student data
+        setAssignedChar(data.assignedChar);
+        setTargetBits(data.targetBits);
+        setCurrentBits(data.currentBits);
+        setQuestions(data.questions);
+        setAllGroupsCompleted(data.allGroupsCompleted);
+        // Restore saved answers
+        const alphaSavedAnswers = data.alphaAnswers ? JSON.parse(data.alphaAnswers) : [];
+        const betaSavedAnswers = data.betaAnswers ? JSON.parse(data.betaAnswers) : [];
+        const gammaSavedAnswers = data.gammaAnswers ? JSON.parse(data.gammaAnswers) : [];
+        
+        // Group questions to get correct lengths
+        const alphaQuestions = data.questions.filter((q: Question) => q.bitGroup.toLowerCase() === 'alpha');
+        const betaQuestions = data.questions.filter((q: Question) => q.bitGroup.toLowerCase() === 'beta');
+        const gammaQuestions = data.questions.filter((q: Question) => q.bitGroup.toLowerCase() === 'gamma');
+        
+        setAlphaAnswers(alphaSavedAnswers.length > 0 ? alphaSavedAnswers : new Array(alphaQuestions.length).fill(-1));
+        setBetaAnswers(betaSavedAnswers.length > 0 ? betaSavedAnswers : new Array(betaQuestions.length).fill(-1));
+        setGammaAnswers(gammaSavedAnswers.length > 0 ? gammaSavedAnswers : new Array(gammaQuestions.length).fill(-1));
+        
+        setAlphaCompleted(data.alphaCompleted);
+        setBetaCompleted(data.betaCompleted);
+        setGammaCompleted(data.gammaCompleted);
+      } else {
+        console.error('Failed to refresh student data:', response.status);
+      }
+    } catch (err) {
+      console.error('Failed to refresh student data:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Function to handle page refresh and data recovery
+  const handlePageRefresh = async () => {
+    if (studentIdFromUrl) {
+      await fetchStudentData(studentIdFromUrl);
     }
   };
 
@@ -168,6 +270,7 @@ export default function GamePage() {
         setAssignedChar(data.assignedChar);
         setCharPosition(data.charPosition);
         setTargetBits(data.targetBits);
+        setCurrentBits(data.targetBits); // Initially same as targetBits
         setQuestions(data.questions);
         
         // Group questions and initialize answer arrays
@@ -178,6 +281,10 @@ export default function GamePage() {
         setAlphaAnswers(new Array(alphaQuestions.length).fill(-1));
         setBetaAnswers(new Array(betaQuestions.length).fill(-1));
         setGammaAnswers(new Array(gammaQuestions.length).fill(-1));
+        setAlphaCompleted(false);
+        setBetaCompleted(false);
+        setGammaCompleted(false);
+        setAllGroupsCompleted(false);
         setIsJoined(true);
       } else {
         const errorData = await response.json();
@@ -255,12 +362,26 @@ export default function GamePage() {
         const result = await response.json();
         setSubmitResult(result);
         
-        // Update group completion status
-        if (currentGroup === 'alpha') setAlphaCompleted(result.correct);
-        else if (currentGroup === 'beta') setBetaCompleted(result.correct);
-        else if (currentGroup === 'gamma') setGammaCompleted(result.correct);
+        // Refresh all data from API to ensure consistency
+        await refreshStudentData();
+        await fetchGameRoom();
         
-        fetchGameRoom(); // Refresh to see updated completion status
+        // If bits were rolled, we need to update the UI accordingly
+        if (result.bitsRolled) {
+          // Reset answers for the current group since questions changed
+          const currentQuestions = getCurrentQuestions();
+          const emptyAnswers = new Array(currentQuestions.length).fill(-1);
+          
+          if (currentGroup === 'alpha') {
+            setAlphaAnswers(emptyAnswers);
+          } else if (currentGroup === 'beta') {
+            setBetaAnswers(emptyAnswers);
+          } else if (currentGroup === 'gamma') {
+            setGammaAnswers(emptyAnswers);
+          }
+          
+          setCurrentQuestionIndex(0);
+        }
       } else {
         const errorData = await response.json();
         setError(errorData.error || '傳送答案失敗');
@@ -287,6 +408,30 @@ export default function GamePage() {
     
     setCurrentQuestionIndex(0);
     setSubmitResult(null);
+  };
+
+  // Function to handle bit rolling - refresh questions and reset answers
+  const handleBitRolling = async () => {
+    try {
+      await refreshStudentData();
+      
+      // Reset answers for the current group since questions changed
+      const currentQuestions = getCurrentQuestions();
+      const emptyAnswers = new Array(currentQuestions.length).fill(-1);
+      
+      if (currentGroup === 'alpha') {
+        setAlphaAnswers(emptyAnswers);
+      } else if (currentGroup === 'beta') {
+        setBetaAnswers(emptyAnswers);
+      } else if (currentGroup === 'gamma') {
+        setGammaAnswers(emptyAnswers);
+      }
+      
+      setCurrentQuestionIndex(0);
+      setSubmitResult(null);
+    } catch (err) {
+      setError('重新載入題目失敗');
+    }
   };
 
   const switchGroup = (newGroup: 'alpha' | 'beta' | 'gamma') => {
@@ -588,6 +733,51 @@ if (isJoined && gameRoom?.status === 'waiting') {
     );
 }
 
+if (allGroupsCompleted) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
+    <div className="max-w-4xl mx-auto">
+      <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white mb-4">
+            🎉 您已完成所有解謎！
+          </h1>
+          <div className="bg-green-900/30 border border-green-500/50 rounded-lg p-4 mt-4">
+            <div className="text-green-300 font-bold text-lg mb-2">🎉 您已成功解碼字元！</div>
+            <div className="text-green-400">您的字元位置為 {charPosition}，請查詢對應字元後，到關主處輸入您的字元</div>
+            <div className="font-mono text-2xl text-green-300 mt-2 tracking-wider">
+              {alphaAnswers.join('')}
+              {betaAnswers.join('')}
+              {gammaAnswers.join('')}
+            </div>
+          </div>
+        </div>
+
+        {/* Group Progress */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {['alpha', 'beta', 'gamma'].map((group) => {
+            return (
+              <div key={group} className="text-center">
+                <div className={`p-4 rounded-xl border-2 ${
+                  getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma')
+                    ? 'bg-green-600/20 border-green-500 text-green-400'
+                    : 'bg-gray-700/50 border-gray-600 text-gray-400'
+                }`}>
+                  <div className="text-xl font-bold mb-2">{group.toUpperCase()}</div>
+                  <div className="text-sm">
+                    {getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma') ? '完成' : '待處理'}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+    </div>
+  )
+}
+
   // Show results screen after group submission
   if (submitResult) {
     return (
@@ -596,7 +786,10 @@ if (isJoined && gameRoom?.status === 'waiting') {
           <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-white mb-4">
-                {submitResult.correct ? '🎉 組別完成！請前往下一關' : '❌ 有一個以上的題目答錯了！再試一次'}
+                {submitResult?.allGroupsCompleted ? '🎉 您已完成所有解謎！' :
+                 submitResult.correct && !submitResult.allGroupsCompleted ? '🎉 組別完成！請前往下一關' : 
+                 submitResult.bitsRolled ? '🔄 新的位元已重新生成！請重新回答' : 
+                 '❌ 有一個以上的題目答錯了！再試一次'}
               </h1>
               <div className="text-lg text-indigo-400 mb-4">
                 {submitResult.group.toUpperCase()} 電路： 
@@ -604,36 +797,49 @@ if (isJoined && gameRoom?.status === 'waiting') {
                   {submitResult.correct ? '✓' : '✗'}
                 </span>
               </div>
-              <div className="text-sm text-gray-300">
-                {submitResult.message}
-              </div>
-              {submitResult.allGroupsCompleted && (
-                <div className="text-lg text-green-400 mt-4">
-                  🎊 您已完成所有解謎！ 🎊
-                </div>
+              {submitResult?.allGroupsCompleted || allGroupsCompleted && (
+                          <div className="bg-green-900/30 border border-green-500/50 rounded-lg p-4 mt-4">
+                          <div className="text-green-300 font-bold text-lg mb-2">🎉 您已成功解碼字元！</div>
+                          <div className="text-green-400">您的字元位置為 {charPosition}，請查詢對應字元後，到關主處輸入您的字元</div>
+                          <div className="font-mono text-2xl text-green-300 mt-2 tracking-wider">
+                            {alphaAnswers.join('')}
+                            {betaAnswers.join('')}
+                            {gammaAnswers.join('')}
+                          </div>
+                        </div>
               )}
             </div>
 
             {/* Group Progress */}
             <div className="grid grid-cols-3 gap-4 mb-8">
-              {['alpha', 'beta', 'gamma'].map((group) => (
-                <div key={group} className="text-center">
-                  <div className={`p-4 rounded-xl border-2 ${
-                    getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma')
-                      ? 'bg-green-600/20 border-green-500 text-green-400'
-                      : 'bg-gray-700/50 border-gray-600 text-gray-400'
-                  }`}>
-                    <div className="text-xl font-bold mb-2">{group.toUpperCase()}</div>
-                    <div className="text-sm">
-                      {getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma') ? '完成' : '待處理'}
+              {['alpha', 'beta', 'gamma'].map((group) => {
+                const retries = group === 'alpha' ? submitResult.alphaRetries : 
+                               group === 'beta' ? submitResult.betaRetries : 
+                               submitResult.gammaRetries;
+                return (
+                  <div key={group} className="text-center">
+                    <div className={`p-4 rounded-xl border-2 ${
+                      getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma')
+                        ? 'bg-green-600/20 border-green-500 text-green-400'
+                        : 'bg-gray-700/50 border-gray-600 text-gray-400'
+                    }`}>
+                      <div className="text-xl font-bold mb-2">{group.toUpperCase()}</div>
+                      <div className="text-sm">
+                        {getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma') ? '完成' : '待處理'}
+                      </div>
+                      {retries > 0 && (
+                        <div className="text-xs text-yellow-400 mt-1">
+                          已重試: {retries} 次
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="flex justify-center space-x-4">
-              {!submitResult.correct && (
+              {!submitResult.correct && !submitResult.bitsRolled && (
                 <button
                   onClick={resetGroup}
                   className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
@@ -641,17 +847,25 @@ if (isJoined && gameRoom?.status === 'waiting') {
                   重試 {currentGroup.toUpperCase()}
                 </button>
               )}
+              {submitResult.bitsRolled && (
+                <button
+                  onClick={handleBitRolling}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  開始新的 {currentGroup.toUpperCase()} 題目
+                </button>
+              )}
+              {submitResult.correct && !submitResult.allGroupsCompleted && (
               <button
                 onClick={() => {
                   setSubmitResult(null);
-                  if (submitResult.correct) {
-                    // Auto-advance to next group if current group was completed successfully
-                    if (currentGroup === 'alpha') {
-                      switchGroup('beta');
-                    } else if (currentGroup === 'beta') {
-                      switchGroup('gamma');
-                    }
-                    // If gamma is completed, stay on gamma (all groups done)
+                  // Auto-advance to next incomplete group
+                  if (!alphaCompleted) {
+                    switchGroup('alpha');
+                  } else if (!betaCompleted) {
+                    switchGroup('beta');
+                  } else if (!gammaCompleted) {
+                    switchGroup('gamma');
                   }
                 }}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
@@ -661,6 +875,7 @@ if (isJoined && gameRoom?.status === 'waiting') {
                  submitResult.correct && currentGroup === 'gamma' ? '全部完成！' :
                  '繼續'}
               </button>
+              )}
             </div>
           </div>
         </div>
@@ -714,11 +929,18 @@ if (isJoined && gameRoom?.status === 'waiting') {
                 <button
                   key={group}
                   onClick={() => switchGroup(group as 'alpha' | 'beta' | 'gamma')}
+                  disabled={isRefreshing || (
+                    (group === 'alpha' && alphaCompleted) ||
+                    (group === 'beta' && betaCompleted) ||
+                    (group === 'gamma' && gammaCompleted)
+                  )}
                   className={`px-4 py-2 rounded-md font-medium text-sm transition-all ${
                     currentGroup === group
                       ? 'bg-indigo-600 text-white shadow-lg'
                       : 'text-gray-400 hover:text-gray-200'
-                  } ${getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma') ? 'border border-green-500' : ''}`}
+                  } ${getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma') ? 'border border-green-500' : ''} ${
+                    isRefreshing ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
                   {group.toUpperCase()}
                   {getGroupCompletionStatus(group as 'alpha' | 'beta' | 'gamma') && (

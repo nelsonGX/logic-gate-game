@@ -27,6 +27,13 @@ export async function GET(
       );
     }
 
+    for (const student of gameRoom.students) {
+      student.targetBits = "null";
+      student.currentBits = "00000000";
+      student.assignedChar = "null";
+      student.questions = "null";
+    }
+
     return NextResponse.json(gameRoom);
 
   } catch (error) {

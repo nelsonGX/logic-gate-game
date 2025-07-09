@@ -27,6 +27,7 @@ model Student {
   assignedChar    String     // The character this student must solve (e.g., "A")
   charPosition    Int        // Position in the target string (0-based)
   targetBits      String     // 8-bit ASCII representation (e.g., "01000001")
+  currentBits     String     // Current bits after rolling (initially same as targetBits)
   solvedChar      String?    // The solved character (null until completed)
   questions       String     // JSON array of questions with answers
   alphaAnswers    String?    // JSON array of Alpha group answers
@@ -35,6 +36,9 @@ model Student {
   alphaCompleted  Boolean    @default(false)
   betaCompleted   Boolean    @default(false)
   gammaCompleted  Boolean    @default(false)
+  alphaRetries    Int        @default(0)  // Number of retry attempts for Alpha group
+  betaRetries     Int        @default(0)  // Number of retry attempts for Beta group
+  gammaRetries    Int        @default(0)  // Number of retry attempts for Gamma group
   isCompleted     Boolean    @default(false)
   completedAt     DateTime?
   
