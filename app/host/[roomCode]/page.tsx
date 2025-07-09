@@ -36,7 +36,6 @@ export default function HostView() {
   const [error, setError] = useState<string | null>(null);
   const [characterInputs, setCharacterInputs] = useState<string[]>([]);
   const [verificationStatus, setVerificationStatus] = useState<boolean[]>([]);
-  const [showVerificationSection, setShowVerificationSection] = useState(false);
 
   const fetchGameData = async () => {
     try {
@@ -336,13 +335,7 @@ export default function HostView() {
         {/* Escape Code Progress & Manual Character Verification */}
         <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-white">🔓 逃脫密碼進度 & 手動驗證</h2>
-            <button
-              onClick={() => setShowVerificationSection(!showVerificationSection)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-            >
-              {showVerificationSection ? '隱藏' : '顯示'} 驗證區域
-            </button>
+            <h2 className="text-xl font-bold text-white">🔓 逃脫密碼進度 & 驗證</h2>
           </div>
           
           {/* Progress Display */}
@@ -350,7 +343,7 @@ export default function HostView() {
             <div className="flex justify-center items-center space-x-2 mb-4">
               {Array.from({ length: gameRoom?.answerString.length || 0 }, (_, index) => {
                 const student = gameRoom?.students.find(s => s.charPosition === index);
-                const displayChar = student?.isCompleted ? student.solvedChar : '_';
+                const displayChar = student?.isCompleted ? '✔' : '_';
                 const isCompleted = student?.isCompleted || false;
                 const isWorking = student && !isCompleted;
                 
@@ -392,88 +385,58 @@ export default function HostView() {
               </div>
             )}
           </div>
-          
-          {/* Manual Verification Section */}
-          {showVerificationSection && (
-            <div className="space-y-4 border-t border-gray-600 pt-4">
-              <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-4">
-                <div className="text-yellow-300 font-semibold mb-2">📋 手動驗證說明：</div>
-                <div className="text-yellow-200 text-sm space-y-1">
-                  <div>• 學生需要從提供的表格中找出對應的字元</div>
-                  <div>• 在下方輸入框中輸入學生找到的字元</div>
-                  <div>• 系統會驗證字元是否符合正確答案</div>
-                  <div>• 綠色 = 正確，紅色 = 錯誤，灰色 = 未輸入</div>
-                </div>
-              </div>
               
-              <div className="text-center">
-                <div className="text-sm text-gray-400 mb-3">
-                  請輸入學生從表格中找到的字元：
-                </div>
-                <div className="flex justify-center items-center space-x-2 mb-4">
-                  {Array.from({ length: gameRoom?.answerString.length || 0 }, (_, index) => (
-                    <div key={index} className="flex flex-col items-center">
-                      <input
-                        type="text"
-                        maxLength={1}
-                        value={characterInputs[index] || ''}
-                        onChange={(e) => handleCharacterInput(index, e.target.value)}
-                        className={`w-12 h-12 text-center font-mono text-lg font-bold rounded-lg border-2 transition-all duration-200 ${
-                          characterInputs[index] && characterInputs[index].length === 1
-                            ? verificationStatus[index]
-                              ? 'bg-green-600/30 border-green-500 text-green-300'
-                              : 'bg-red-600/30 border-red-500 text-red-300'
-                            : 'bg-gray-700 border-gray-600 text-white'
-                        }`}
-                        placeholder="?"
-                      />
-                      <span className="text-xs text-gray-400 mt-1">位置 {index}</span>
-                      {characterInputs[index] && characterInputs[index].length === 1 && (
-                        <span className={`text-xs mt-1 ${verificationStatus[index] ? 'text-green-400' : 'text-red-400'}`}>
-                          {verificationStatus[index] ? '✓' : '✗'}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="flex justify-center space-x-4 mb-4">
-                  <button
-                    onClick={verifyAllCharacters}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-                  >
-                    🔍 驗證全部
-                  </button>
-                  <button
-                    onClick={resetVerification}
-                    className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-                  >
-                    🔄 重置
-                  </button>
-                </div>
-                
-                {/* Verification Status Summary */}
-                <div className="bg-gray-700/30 rounded-lg p-3">
-                  <div className="text-sm text-gray-300 mb-2">驗證狀態：</div>
-                  <div className="flex justify-center space-x-4 text-sm">
-                    <span className="text-green-400">
-                      ✓ 正確：{verificationStatus.filter(status => status).length}
+          <div className="text-center">
+            <div className="text-sm text-gray-400 mb-3">
+              請輸入學生從表格中找到的字元：
+            </div>
+            <div className="flex justify-center items-center space-x-2 mb-4">
+              {Array.from({ length: gameRoom?.answerString.length || 0 }, (_, index) => (
+                <div key={index} className="flex flex-col items-center">
+                  <input
+                    type="text"
+                    maxLength={1}
+                    value={characterInputs[index] || ''}
+                    onChange={(e) => handleCharacterInput(index, e.target.value)}
+                    className={`w-12 h-12 text-center font-mono text-lg font-bold rounded-lg border-2 transition-all duration-200 ${
+                      characterInputs[index] && characterInputs[index].length === 1
+                        ? verificationStatus[index]
+                          ? 'bg-green-600/30 border-green-500 text-green-300'
+                          : 'bg-red-600/30 border-red-500 text-red-300'
+                        : 'bg-gray-700 border-gray-600 text-white'
+                    }`}
+                    placeholder="?"
+                  />
+                  <span className="text-xs text-gray-400 mt-1">位置 {index}</span>
+                  {characterInputs[index] && characterInputs[index].length === 1 && (
+                    <span className={`text-xs mt-1 ${verificationStatus[index] ? 'text-green-400' : 'text-red-400'}`}>
+                      {verificationStatus[index] ? '✓' : '✗'}
                     </span>
-                    <span className="text-red-400">
-                      ✗ 錯誤：{verificationStatus.filter((status, index) => 
-                        characterInputs[index] && characterInputs[index].length === 1 && !status
-                      ).length}
-                    </span>
-                    <span className="text-gray-400">
-                      ⏳ 待輸入：{verificationStatus.filter((status, index) => 
-                        !characterInputs[index] || characterInputs[index].length === 0
-                      ).length}
-                    </span>
-                  </div>
+                  )}
                 </div>
+              ))}
+            </div>
+                        
+            {/* Verification Status Summary */}
+            <div className="bg-gray-700/30 rounded-lg p-3">
+              <div className="text-sm text-gray-300 mb-2">驗證狀態：</div>
+              <div className="flex justify-center space-x-4 text-sm">
+                <span className="text-green-400">
+                  ✓ 正確：{verificationStatus.filter(status => status).length}
+                </span>
+                <span className="text-red-400">
+                  ✗ 錯誤：{verificationStatus.filter((status, index) => 
+                    characterInputs[index] && characterInputs[index].length === 1 && !status
+                  ).length}
+                </span>
+                <span className="text-gray-400">
+                  ⏳ 待輸入：{verificationStatus.filter((status, index) => 
+                    !characterInputs[index] || characterInputs[index].length === 0
+                  ).length}
+                </span>
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Students Grid */}
@@ -576,12 +539,6 @@ export default function HostView() {
                         student.isCompleted ? '已完成' : '作業中...'
                       }
                     </div>
-                    {student.solvedChar && (
-                      <div className="text-sm text-green-300">
-                        <strong>已解碼：</strong> 
-                        <span className="font-mono ml-1 text-lg">{student.solvedChar}</span>
-                      </div>
-                    )}
                     {student.completedAt && (
                       <div className="text-xs text-green-400">
                         完成時間： {new Date(student.completedAt).toLocaleTimeString()}
