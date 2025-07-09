@@ -259,8 +259,6 @@ export function regenerateQuestionsForGroup(
           do {
             gate2Type = gateTypes[Math.floor(Math.random() * gateTypes.length)];
             gate2SecondInput = Math.random() < 0.5;
-            const testOutput = calculateGateOutput(gate2Type, [gate1Output, gate2SecondInput]);
-            gate2SecondInput = testOutput === bit ? gate2SecondInput : !gate2SecondInput;
           } while (!canGateProduceOutput(gate2Type, gate1Output, gate2SecondInput, bit));
         }
       }
