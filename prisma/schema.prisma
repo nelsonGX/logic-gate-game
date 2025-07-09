@@ -13,7 +13,8 @@ model GameRoom {
   team          Int
   studentAmount Int
   answerString  String
-  status        String     @default("waiting") // waiting, active, completed
+  status        String     @default("waiting") // waiting, active, completed, expired
+  gameStartedAt DateTime?  // When the game was started (for countdown)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   

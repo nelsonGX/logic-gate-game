@@ -11,6 +11,7 @@ interface GameRoom {
   studentAmount: number;
   answerString: string;
   status: string;
+  gameStartedAt: string | null;
   students: Student[];
 }
 
@@ -69,6 +70,8 @@ export default function GamePage() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [submitResult, setSubmitResult] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
     fetchGameRoom();
@@ -83,6 +86,13 @@ export default function GamePage() {
       return () => clearInterval(interval);
     }
   }, [roomCode, studentIdFromUrl, isJoined]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    calculateTimeRemaining();
+    const countdownInterval = setInterval(calculateTimeRemaining, 1000);
+    return () => clearInterval(countdownInterval);
+  }, [gameRoom?.gameStartedAt, gameRoom?.status]);
 
   // // Additional effect to refresh student data periodically when game is active
   // useEffect(() => {
@@ -456,6 +466,33 @@ export default function GamePage() {
     } else { // gamma
       return targetBits[bitIndex + 6] || '_';
     }
+  };
+
+  // Calculate time remaining
+  const calculateTimeRemaining = () => {
+    if (!gameRoom?.gameStartedAt || gameRoom.status !== 'active') {
+      setTimeRemaining(null);
+      return;
+    }
+
+    const startTime = new Date(gameRoom.gameStartedAt).getTime();
+    const now = new Date().getTime();
+    const elapsed = now - startTime;
+    const totalTime = 40 * 60 * 1000; // 40 minutes in milliseconds
+    const remaining = Math.max(0, totalTime - elapsed);
+
+    if (remaining <= 0) {
+      setIsExpired(true);
+    }
+
+    setTimeRemaining(remaining);
+  };
+
+  // Format time for display
+  const formatTime = (milliseconds: number) => {
+    const minutes = Math.floor(milliseconds / (1000 * 60));
+    const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
   // Progress display component - removed to prevent students from seeing characters
@@ -883,6 +920,36 @@ if (allGroupsCompleted) {
     );
   }
 
+  // Show expired game screen
+  if (isJoined && (isExpired || gameRoom?.status === 'expired')) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+        <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 p-8 text-center max-w-md">
+          <div className="text-6xl mb-4">⏰</div>
+          <h1 className="text-3xl font-bold text-red-400 mb-4">遊戲時間已結束</h1>
+          <p className="text-gray-300 mb-6">
+            40分鐘的遊戲時間已經結束，您已被踢出遊戲。
+          </p>
+          
+          <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4 mb-6">
+            <div className="text-red-300 font-semibold mb-2">您的進度</div>
+            <div className="grid grid-cols-3 gap-2 text-sm">
+              <div className={`p-2 rounded ${alphaCompleted ? 'bg-green-600/30 text-green-300' : 'bg-gray-600/50 text-gray-400'}`}>
+                Alpha {alphaCompleted ? '✓' : '✗'}
+              </div>
+              <div className={`p-2 rounded ${betaCompleted ? 'bg-green-600/30 text-green-300' : 'bg-gray-600/50 text-gray-400'}`}>
+                Beta {betaCompleted ? '✓' : '✗'}
+              </div>
+              <div className={`p-2 rounded ${gammaCompleted ? 'bg-green-600/30 text-green-300' : 'bg-gray-600/50 text-gray-400'}`}>
+                Gamma {gammaCompleted ? '✓' : '✗'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Show message if game is not active
   if (isJoined && gameRoom?.status !== 'active') {
     return (
@@ -916,6 +983,19 @@ if (allGroupsCompleted) {
               房間： {gameRoom?.roomCode}
             </div>
           </div>
+          
+          {/* Countdown Timer */}
+          {timeRemaining !== null && (
+            <div className="mt-3">
+              <div className={`text-xl font-bold ${
+                timeRemaining <= 5 * 60 * 1000 ? 'text-red-400' : 
+                timeRemaining <= 10 * 60 * 1000 ? 'text-yellow-400' : 'text-green-400'
+              }`}>
+                ⏰ 剩餘時間：{formatTime(timeRemaining)}
+              </div>
+            </div>
+          )}
+          
           <div className="text-xs md:text-sm text-gray-400 mt-2">
             逐組解決邏輯閘電路來解碼您指定的字元
           </div>

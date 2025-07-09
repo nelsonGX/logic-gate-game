@@ -225,20 +225,22 @@ export default function SelectQuestion({
                 <div className="w-3 sm:w-4 md:w-8 h-0.5 bg-yellow-400" />
               </div>
               {/* Second input */}
-              <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
-                <span className="text-gray-300 text-xs font-medium min-w-[8px] sm:min-w-[12px]">C</span>
-                <div
-                  className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
-                    gate2.inputs[1] 
-                      ? 'bg-green-400 border-green-300 text-green-900' 
-                      : 'bg-red-400 border-red-300 text-red-900'
-                  }`}
-                  title={`輸入 C: ${gate2.inputs[1] ? '1' : '0'}`}
-                >
-                  {gate2.inputs[1] ? '1' : '0'}
-                </div>
-                <div className="w-3 sm:w-4 md:w-8 h-0.5 bg-gray-400" />
-              </div>
+              {gate2.type !== 'NOT' && (
+                              <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
+                              <span className="text-gray-300 text-xs font-medium min-w-[8px] sm:min-w-[12px]">C</span>
+                              <div
+                                className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
+                                  gate2.inputs[1] 
+                                    ? 'bg-green-400 border-green-300 text-green-900' 
+                                    : 'bg-red-400 border-red-300 text-red-900'
+                                }`}
+                                title={`輸入 C: ${gate2.inputs[1] ? '1' : '0'}`}
+                              >
+                                {gate2.inputs[1] ? '1' : '0'}
+                              </div>
+                              <div className="w-3 sm:w-4 md:w-8 h-0.5 bg-gray-400" />
+                            </div>
+              )}
             </div>
 
             {/* Gate 2 Body */}

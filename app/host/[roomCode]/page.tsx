@@ -14,6 +14,9 @@ interface Student {
   alphaCompleted: boolean;
   betaCompleted: boolean;
   gammaCompleted: boolean;
+  alphaAnswers: string | null;
+  betaAnswers: string | null;
+  gammaAnswers: string | null;
   isCompleted: boolean;
   completedAt: string | null;
 }
@@ -25,6 +28,7 @@ interface GameRoom {
   studentAmount: number;
   answerString: string;
   status: string;
+  gameStartedAt: string | null;
   students: Student[];
 }
 
@@ -36,6 +40,8 @@ export default function HostView() {
   const [error, setError] = useState<string | null>(null);
   const [characterInputs, setCharacterInputs] = useState<string[]>([]);
   const [verificationStatus, setVerificationStatus] = useState<boolean[]>([]);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [gameExpired, setGameExpired] = useState(false);
 
   const fetchGameData = async () => {
     try {
@@ -138,10 +144,59 @@ export default function HostView() {
     return () => clearInterval(interval);
   }, [roomCode]);
 
+  // Countdown timer effect
+  useEffect(() => {
+    calculateTimeRemaining();
+    const countdownInterval = setInterval(calculateTimeRemaining, 1000);
+    return () => clearInterval(countdownInterval);
+  }, [gameRoom?.gameStartedAt, gameRoom?.status, gameExpired]);
+
   const getProgressPercentage = () => {
     if (!gameRoom || gameRoom.students.length === 0) return 0;
     const completedStudents = gameRoom.students.filter(s => s.isCompleted).length;
     return (completedStudents / gameRoom.students.length) * 100;
+  };
+
+  // Calculate time remaining
+  const calculateTimeRemaining = () => {
+    if (!gameRoom?.gameStartedAt || gameRoom.status !== 'active') {
+      return;
+    }
+
+    const startTime = new Date(gameRoom.gameStartedAt).getTime();
+    const now = new Date().getTime();
+    const elapsed = now - startTime;
+    const totalTime = 40 * 60 * 1000; // 40 minutes in milliseconds
+    const remaining = Math.max(0, totalTime - elapsed);
+
+    setTimeRemaining(remaining);
+
+    // If time is up, expire the game
+    if (remaining <= 0 && !gameExpired) {
+      expireGame();
+    }
+  };
+
+  // Function to expire the game
+  const expireGame = async () => {
+    try {
+      const response = await fetch(`/api/game/${roomCode}/expire`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        setGameExpired(true);
+        fetchGameData(); // Refresh data to show expired status
+      }
+    } catch (err) {
+      console.error('Failed to expire game:', err);
+    }
+  };
+
+  // Format time for display
+  const formatTime = (milliseconds: number) => {
+    const minutes = Math.floor(milliseconds / (1000 * 60));
+    const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
 
@@ -305,15 +360,32 @@ export default function HostView() {
               </h1>
               <p className="text-gray-300 mt-1">房間： {gameRoom?.roomCode} | 隊伍： {gameRoom?.team}</p>
             </div>
+            
+            {/* Countdown Timer */}
+            {timeRemaining !== null && (
+              <div className="text-center">
+                <div className={`text-3xl font-bold ${
+                  timeRemaining <= 5 * 60 * 1000 ? 'text-red-400' : 
+                  timeRemaining <= 10 * 60 * 1000 ? 'text-yellow-400' : 'text-green-400'
+                }`}>
+                  {timeRemaining >= 0 ?
+                    `⏰ ${formatTime(timeRemaining)}`
+                    : '⏰ 時間已到，遊戲已結束'
+                  }
+                </div>
+                <div className="text-sm text-gray-300">剩餘時間</div>
+              </div>
+            )}
+            
             <div className="text-right">
               <div className="text-2xl font-bold text-green-400">
                 {gameRoom?.students.filter(s => s.isCompleted).length || 0} / {gameRoom?.studentAmount || 0}
               </div>
               <div className="text-sm text-gray-300">學生完成數</div>
             </div>
-            <Link href="/" className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+            <a onClick={() => {expireGame(); window.location.href = '/'}} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
             🏠 返回主頁
-            </Link>
+            </a>
           </div>
           
           {/* Progress Bar */}
@@ -485,7 +557,15 @@ export default function HostView() {
                             }`}
                             title={`Alpha bit ${bitIndex + 1}`}
                           >
-                            {student.alphaCompleted ? student.alphaAnswers[bitIndex] : '_'}
+                            {student.alphaCompleted && student.alphaAnswers ? 
+                              (() => {
+                                try {
+                                  const answers = JSON.parse(student.alphaAnswers);
+                                  return answers[bitIndex] || '_';
+                                } catch {
+                                  return '_';
+                                }
+                              })() : '_'}
                           </div>
                         ))}
                         <div className="text-gray-500 mx-1 text-xs">|</div>
@@ -500,7 +580,15 @@ export default function HostView() {
                             }`}
                             title={`Beta bit ${bitIndex - 2}`}
                           >
-                            {student.betaCompleted ? student.betaAnswers[bitIndex] : '_'}
+                            {student.betaCompleted && student.betaAnswers ? 
+                              (() => {
+                                try {
+                                  const answers = JSON.parse(student.betaAnswers);
+                                  return answers[bitIndex] || '_';
+                                } catch {
+                                  return '_';
+                                }
+                              })() : '_'}
                           </div>
                         ))}
                         <div className="text-gray-500 mx-1 text-xs">|</div>
@@ -515,7 +603,15 @@ export default function HostView() {
                             }`}
                             title={`Gamma bit ${bitIndex - 5}`}
                           >
-                            {student.gammaCompleted ? student.gammaAnswers[bitIndex] : '_'}
+                            {student.gammaCompleted && student.gammaAnswers ? 
+                              (() => {
+                                try {
+                                  const answers = JSON.parse(student.gammaAnswers);
+                                  return answers[bitIndex] || '_';
+                                } catch {
+                                  return '_';
+                                }
+                              })() : '_'}
                           </div>
                         ))}
                       </div>

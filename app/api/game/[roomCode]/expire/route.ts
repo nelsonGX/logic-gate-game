@@ -15,6 +15,9 @@ export async function POST(
       where: {
         roomCode: roomCode,
       },
+      include: {
+        students: true,
+      },
     });
 
     if (!gameRoom) {
@@ -24,30 +27,33 @@ export async function POST(
       );
     }
 
-    if (gameRoom.status !== 'waiting') {
+    if (gameRoom.status !== 'active') {
       return NextResponse.json(
-        { error: 'Game is not in waiting state' },
+        { error: 'Game is not active' },
         { status: 400 }
       );
     }
 
+    // Update game room status to expired
     const updatedGameRoom = await prisma.gameRoom.update({
       where: {
         roomCode: roomCode,
       },
       data: {
-        status: 'active',
-        gameStartedAt: new Date(),
+        status: 'expired',
       },
     });
 
-    return NextResponse.json(updatedGameRoom);
+    return NextResponse.json({
+      message: 'Game expired successfully',
+      gameRoom: updatedGameRoom,
+    });
 
   } catch (error) {
-    console.error('Error starting game:', error);
+    console.error('Error expiring game:', error);
     return NextResponse.json(
-      { error: 'Failed to start game' },
+      { error: 'Failed to expire game' },
       { status: 500 }
     );
   }
-}
+} 

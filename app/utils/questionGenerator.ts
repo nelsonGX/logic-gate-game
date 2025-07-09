@@ -241,9 +241,16 @@ export function regenerateQuestionsForGroup(
       const gate1Inputs = [Math.random() < 0.5, Math.random() < 0.5];
       const gate1Output = calculateGateOutput(gate1Type, gate1Inputs);
       
-      const gate2SecondInput = Math.random() < 0.5;
-      const testOutput = calculateGateOutput(gate2Type, [gate1Output, gate2SecondInput]);
-      const finalGate2Input = testOutput === bit ? gate2SecondInput : !gate2SecondInput;
+      let gate2SecondInput = null;
+
+      if (gate2Type === 'NOT') {
+         gate2SecondInput = null;
+      } else {
+        gate2SecondInput = Math.random() < 0.5;
+        const testOutput = calculateGateOutput(gate2Type, [gate1Output, gate2SecondInput]);
+        gate2SecondInput = testOutput === bit ? gate2SecondInput : !gate2SecondInput;
+      }
+
       
       questions.push({
         id: `gamma_bit_${i}`,
@@ -251,7 +258,7 @@ export function regenerateQuestionsForGroup(
         text: `Gamma 字元 ${i + 1}：計算複合電路的最終輸出`,
         circuit: {
           gate1: { type: gate1Type, inputs: gate1Inputs },
-          gate2: { type: gate2Type, inputs: [null, finalGate2Input] }
+          gate2: { type: gate2Type, inputs: gate2Type === 'NOT' ? [null, gate2SecondInput] : [null] }
         },
         options: ['0 (False)', '1 (True)'],
         correctAnswer: bit ? 1 : 0,
