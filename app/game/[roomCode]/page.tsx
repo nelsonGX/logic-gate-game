@@ -313,40 +313,27 @@ export default function GamePage() {
     }
   };
 
-  // Progress display component
+  // Progress display component - removed to prevent students from seeing characters
   const ProgressDisplay = () => {
     if (!gameRoom) return null;
-
-    const displayChars = [];
-    for (let i = 0; i < gameRoom.answerString.length; i++) {
-      const student = gameRoom.students.find(s => s.charPosition === i);
-      const char = student?.solvedChar || '_';
-      const isCompleted = student?.isCompleted || false;
-      
-      displayChars.push(
-        <span
-          key={i}
-          className={`font-mono text-2xl px-2 py-1 mx-1 rounded ${
-            isCompleted 
-              ? 'bg-green-600/30 text-green-300 border border-green-500' 
-              : 'bg-gray-700/50 text-gray-400 border border-gray-600'
-          }`}
-          title={student ? `${student.displayName}: ${isCompleted ? '已完成' : '回答中...'}` : '沒有學生加入'}
-        >
-          {char}
-        </span>
-      );
-    }
 
     return (
       <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-600">
         <div className="text-center">
           <h3 className="text-lg font-semibold text-white mb-2">逃脱密碼進度</h3>
           <div className="flex justify-center items-center flex-wrap">
-            {displayChars}
+            {Array.from({ length: gameRoom.answerString.length }, (_, i) => (
+              <span
+                key={i}
+                className="font-mono text-2xl px-2 py-1 mx-1 rounded bg-gray-700/50 text-gray-400 border border-gray-600"
+                title="位置已隱藏"
+              >
+                ?
+              </span>
+            ))}
           </div>
           <div className="text-sm text-gray-400 mt-2">
-            {gameRoom.students.filter(s => s.isCompleted).length} / {gameRoom.students.length} 字元已解鎖
+            {gameRoom.students.filter(s => s.isCompleted).length} / {gameRoom.students.length} 學生已完成
           </div>
         </div>
       </div>
@@ -622,7 +609,7 @@ if (isJoined && gameRoom?.status === 'waiting') {
               </div>
               {submitResult.allGroupsCompleted && (
                 <div className="text-lg text-green-400 mt-4">
-                  🎊 目標字元已完全解碼！ 🎊
+                  🎊 您已完成所有解謎！ 🎊
                 </div>
               )}
             </div>
@@ -671,7 +658,7 @@ if (isJoined && gameRoom?.status === 'waiting') {
               >
                 {submitResult.correct && currentGroup === 'alpha' ? '繼續到 Beta' :
                  submitResult.correct && currentGroup === 'beta' ? '繼續到 Gamma' :
-                 submitResult.correct && currentGroup === 'gamma' ? '字元完成！' :
+                 submitResult.correct && currentGroup === 'gamma' ? '全部完成！' :
                  '繼續'}
               </button>
             </div>
@@ -743,70 +730,47 @@ if (isJoined && gameRoom?.status === 'waiting') {
           </div>
         </div>
 
-        {/* Bit Progress Display */}
+        {/* Bit Progress Display - Hidden from students */}
         <div className="mb-6 md:mb-8">
           <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-600">
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-white mb-2">目標位元進度</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">解謎進度</h3>
               <div className="text-sm text-gray-400 mb-3">
-                您指定的字元 → 8位元二進位
+                完成所有三個組別來解鎖您的字元
               </div>
-              <div className="flex justify-center items-center space-x-1">
-                {/* Alpha bits (0-2) */}
-                <div className="flex space-x-1">
-                  {[0, 1, 2].map((bitIndex) => (
-                    <div
-                      key={`alpha-${bitIndex}`}
-                      className={`w-8 h-8 rounded border-2 flex items-center justify-center font-mono text-sm font-bold ${
-                        alphaCompleted
-                          ? 'bg-green-600/30 border-green-500 text-green-300'
-                          : 'bg-gray-700/50 border-gray-600 text-gray-400'
-                      }`}
-                      title={`Alpha bit ${bitIndex + 1}`}
-                    >
-                      {getBitValue('alpha', bitIndex)}
-                    </div>
-                  ))}
+              <div className="flex justify-center items-center space-x-4">
+                {/* Alpha group */}
+                <div className={`px-4 py-2 rounded-lg border-2 ${
+                  alphaCompleted
+                    ? 'bg-green-600/30 border-green-500 text-green-300'
+                    : 'bg-gray-700/50 border-gray-600 text-gray-400'
+                }`}>
+                  <div className="text-sm font-bold">Alpha</div>
+                  <div className="text-xs">{alphaCompleted ? '已完成' : '進行中'}</div>
                 </div>
-                <div className="text-gray-500 mx-2">|</div>
-                {/* Beta bits (3-5) */}
-                <div className="flex space-x-1">
-                  {[3, 4, 5].map((bitIndex) => (
-                    <div
-                      key={`beta-${bitIndex}`}
-                      className={`w-8 h-8 rounded border-2 flex items-center justify-center font-mono text-sm font-bold ${
-                        betaCompleted
-                          ? 'bg-green-600/30 border-green-500 text-green-300'
-                          : 'bg-gray-700/50 border-gray-600 text-gray-400'
-                      }`}
-                      title={`Beta bit ${bitIndex - 2}`}
-                    >
-                      {getBitValue('beta', bitIndex - 3)}
-                    </div>
-                  ))}
+                
+                {/* Beta group */}
+                <div className={`px-4 py-2 rounded-lg border-2 ${
+                  betaCompleted
+                    ? 'bg-green-600/30 border-green-500 text-green-300'
+                    : 'bg-gray-700/50 border-gray-600 text-gray-400'
+                }`}>
+                  <div className="text-sm font-bold">Beta</div>
+                  <div className="text-xs">{betaCompleted ? '已完成' : '進行中'}</div>
                 </div>
-                <div className="text-gray-500 mx-2">|</div>
-                {/* Gamma bits (6-7) */}
-                <div className="flex space-x-1">
-                  {[6, 7].map((bitIndex) => (
-                    <div
-                      key={`gamma-${bitIndex}`}
-                      className={`w-8 h-8 rounded border-2 flex items-center justify-center font-mono text-sm font-bold ${
-                        gammaCompleted
-                          ? 'bg-green-600/30 border-green-500 text-green-300'
-                          : 'bg-gray-700/50 border-gray-600 text-gray-400'
-                      }`}
-                      title={`Gamma bit ${bitIndex - 5}`}
-                    >
-                      {getBitValue('gamma', bitIndex - 6)}
-                    </div>
-                  ))}
+                
+                {/* Gamma group */}
+                <div className={`px-4 py-2 rounded-lg border-2 ${
+                  gammaCompleted
+                    ? 'bg-green-600/30 border-green-500 text-green-300'
+                    : 'bg-gray-700/50 border-gray-600 text-gray-400'
+                }`}>
+                  <div className="text-sm font-bold">Gamma</div>
+                  <div className="text-xs">{gammaCompleted ? '已完成' : '進行中'}</div>
                 </div>
               </div>
               <div className="text-xs text-gray-400 mt-3">
-                <span className="text-blue-400">Alpha (3 位元)</span> | 
-                <span className="text-purple-400 ml-1">Beta (3 位元)</span> | 
-                <span className="text-yellow-400 ml-1">Gamma (2 位元)</span>
+                完成所有組別後，您將為逃脫密碼貢獻一個字元
               </div>
             </div>
           </div>

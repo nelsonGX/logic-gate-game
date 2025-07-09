@@ -83,7 +83,7 @@ function generateCharacterQuestions(character: string): unknown[] {
       
       // Create a 2-gate circuit: Gate1 -> Gate2 -> Output
       const gate1Type = complexGateTypes[Math.floor(Math.random() * complexGateTypes.length)];
-      const gate2Type = complexGateTypes[Math.floor(Math.random() * complexGateTypes.length)];
+      const gate2Type = gateTypes[Math.floor(Math.random() * gateTypes.length)];
       
       // Generate inputs for gate1
       const gate1Inputs = [Math.random() < 0.5, Math.random() < 0.5];
