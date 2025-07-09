@@ -24,7 +24,7 @@ export async function POST(
       return NextResponse.json({ error: 'Student not found' }, { status: 404 });
     }
 
-    if (student.assignedChar !== answer) {
+    if (student.assignedChar.toLowerCase() !== answer.toLowerCase()) {
       return NextResponse.json({ error: 'Wrong answer' }, { status: 400 });
     }
 
