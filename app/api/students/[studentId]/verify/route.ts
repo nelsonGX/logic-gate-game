@@ -24,6 +24,11 @@ export async function POST(
       return NextResponse.json({ error: 'Student not found' }, { status: 404 });
     }
 
+    console.log('======VERIFY======')
+    console.log("Student Assigned Char: ", student.assignedChar);
+    console.log("Student Answer: ", answer);
+    console.log('======VERIFY======')
+
     if (student.assignedChar.toLowerCase() !== answer.toLowerCase()) {
       return NextResponse.json({ error: 'Wrong answer' }, { status: 400 });
     }
